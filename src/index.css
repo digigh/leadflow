@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F6F8FB;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F6F8FB;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D9E6;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A8B5C8;
+}
+
+/* ─── DARK MODE ───────────────────────────────────────────────────────────── */
+html.dark body {
+  background-color: #0F1117;
+}
+html.dark ::-webkit-scrollbar-track { background: #161B27; }
+html.dark ::-webkit-scrollbar-thumb { background: #2A2F3E; }
+
+/* Cards / panels */
+html.dark .bg-white,
+html.dark .bg-\[\#F6F8FB\] { background-color: #1A2035 !important; }
+html.dark .bg-\[\#F8FAFC\],
+html.dark .bg-\[\#F9FBFF\],
+html.dark .bg-\[\#F4F6F9\] { background-color: #1E2540 !important; }
+
+/* Borders */
+html.dark .border-\[\#E6EBF2\],
+html.dark .border-\[\#EEF2F7\] { border-color: #2A2F3E !important; }
+
+/* Text */
+html.dark .text-\[\#2F3542\]  { color: #E2E8F0 !important; }
+html.dark .text-\[\#6B778C\]  { color: #8892A4 !important; }
+html.dark .text-\[\#9AA5B1\]  { color: #64748B !important; }
+
+/* Inputs & selects */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #1E2540 !important;
+  border-color: #2A2F3E !important;
+  color: #E2E8F0 !important;
+}
+html.dark input::placeholder { color: #4A5568 !important; }
+
+/* Table header */
+html.dark thead tr { background-color: #1E2540 !important; }
+
+/* Metric cards — keep accent colours, darken background */
+html.dark [class*="rounded-xl"][class*="border"] {
+  background-color: #1A2035;
+  border-color: #2A2F3E;
+}
+
+/* Nav active in dark */
+html.dark .bg-\[\#E9F2FF\] { background-color: #1E3A5F !important; }
+
+/* Amber warning */
+html.dark .bg-amber-50  { background-color: #2D1E00 !important; }
+html.dark .border-amber-200 { border-color: #92400E !important; }
+html.dark .text-amber-700 { color: #FCD34D !important; }
+html.dark .text-amber-600 { color: #FBBF24 !important; }
+
