@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, Fragment } from 'react'
+import React, { useState, useEffect, useCallback, Fragment, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { MOCK_LEADS, STATUS_OPTIONS, PRIORITY_OPTIONS, ASSIGNED_OPTIONS } from '../lib/constants'
 import { StatusBadge, PriorityBadge, MetricCard, Toast } from '../components/UI'
 import {
   Users, CheckCircle, Star, Clock, Search, RefreshCw,
   Globe, Facebook, Building2, Mail, Phone, Edit2, Save, X, AlertTriangle,
-  ChevronLeft, ChevronRight, Calendar
+  ChevronLeft, ChevronRight, Calendar, Plus
 } from 'lucide-react'
 
 import { syncGoogleSheets } from '../lib/sheets'
@@ -17,6 +17,13 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   const assignedOpts = settings.assignedOptions || ASSIGNED_OPTIONS
   const colVis = settings.columnVisibility || Object.fromEntries(DEFAULT_COLUMNS.map(c => [c.key, true]))
   const customCols = settings.customColumns || []
+
+  // Dynamic source filter — derived from actual lead data (incl. any custom sources from imports)
+  const availableSources = useMemo(() => {
+    const fromLeads = [...new Set((leads || []).map(l => l.source).filter(Boolean))]
+    const base = ['Website', 'Meta']
+    return [...new Set([...base, ...fromLeads])].sort()
+  }, [leads])
 
   const baseCols = DEFAULT_COLUMNS.filter(c => c.key !== 'actions')
   const actionCol = DEFAULT_COLUMNS.find(c => c.key === 'actions')
@@ -46,7 +53,64 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
 
+  // ── Add Lead modal state ──────────────────────────────────────────────────
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [addForm, setAddForm] = useState({})
+  const [adding, setAdding] = useState(false)
+  const [successLead, setSuccessLead] = useState(null)  // holds name of last-added lead
+  const [addCustomSource, setAddCustomSource] = useState('')  // for custom source entry
+
+  const emptyAddForm = () => ({
+    lead_name: '', company: '', email: '', phone: '',
+    job_title: '', source: 'Website', message: '',
+    status: '', priority: '', assigned_to: '',
+    follow_up_at: '',
+  })
+
+  // Effective source: if user typed custom, use that; otherwise use dropdown value
+  const addEffectiveSource = addForm.source === '__custom__'
+    ? addCustomSource.trim()
+    : addForm.source
+
   const showToast = (msg, type = 'success') => setToast({ msg, type })
+
+  // ── Add Lead to Supabase + shared state ───────────────────────────────────
+  const handleAddLead = async () => {
+    if (!addForm.lead_name?.trim()) { showToast('Lead name is required', 'error'); return }
+    if (!addEffectiveSource) { showToast('Source is required', 'error'); return }
+    setAdding(true)
+    const payload = {
+      lead_name: addForm.lead_name.trim(),
+      company: addForm.company || null,
+      email: addForm.email || null,
+      phone: addForm.phone || null,
+      job_title: addForm.job_title || null,
+      source: addEffectiveSource,          // custom or selected value
+      message: addForm.message || null,
+      status: addForm.status || null,
+      priority: addForm.priority || null,
+      assigned_to: addForm.assigned_to || null,
+      follow_up_at: addForm.follow_up_at || null,
+      date: new Date().toISOString(),
+    }
+    if (dbReady) {
+      const { data, error } = await supabase.from('leads').insert([payload]).select().single()
+      if (error) {
+        showToast(`Add failed: ${error.message}`, 'error')
+        setAdding(false)
+        return
+      }
+      setLeads(prev => [data, ...prev])
+      setSuccessLead(data.lead_name)          // show confirmation screen
+    } else {
+      const newLead = { ...payload, id: Date.now() }
+      setLeads(prev => [newLead, ...prev])
+      setSuccessLead(newLead.lead_name)
+    }
+    setAddForm(emptyAddForm())
+    setAddCustomSource('')
+    setAdding(false)
+  }
 
   // ── Save edits to Cloud Database ─────────────────────────────────────────────────
   const handleSave = async (id) => {
@@ -180,6 +244,166 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
     <div className="space-y-5">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
+      {/* ── Add Lead Modal ─────────────────────────────────────────────── */}
+      {addModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden">
+
+            {/* ──── SUCCESS SCREEN ──── */}
+            {successLead ? (
+              <div className="flex flex-col items-center justify-center py-12 px-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                  <CheckCircle size={36} className="text-green-500" />
+                </div>
+                <h3 className="text-lg font-bold text-[#2F3542] mb-1">Lead Added Successfully!</h3>
+                <p className="text-sm text-[#9AA5B1] mb-1">
+                  <span className="font-semibold text-[#2F3542]">{successLead}</span> has been added to Lead Management.
+                </p>
+                <p className="text-xs text-[#9AA5B1] mb-6">They will also appear in Follow-ups if a follow-up date was set.</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setSuccessLead(null); setAddForm(emptyAddForm()); setAddCustomSource('') }}
+                    className="px-5 py-2 text-sm bg-[#2F6BFF] text-white font-bold rounded-lg hover:bg-[#1A4FCC] transition-colors">
+                    + Add Another Lead
+                  </button>
+                  <button
+                    onClick={() => { setSuccessLead(null); setAddModalOpen(false); setAddCustomSource('') }}
+                    className="px-5 py-2 text-sm bg-[#F4F6F9] text-[#6B778C] font-semibold rounded-lg hover:bg-[#E6EBF2] transition-colors">
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+            <>
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6EBF2]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
+                  <Plus size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#2F3542]">Add Manual Lead</h3>
+                  <p className="text-[11px] text-[#9AA5B1]">Fill in the details below to create a new lead</p>
+                </div>
+              </div>
+              <button onClick={() => setAddModalOpen(false)} className="text-[#9AA5B1] hover:text-[#2F3542] transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="px-6 py-5 grid grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
+              {/* Left col */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Lead Name <span className="text-red-500">*</span></label>
+                  <input value={addForm.lead_name || ''} onChange={e => setAddForm(f => ({ ...f, lead_name: e.target.value }))}
+                    placeholder="Full name"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/30 focus:border-green-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Company</label>
+                  <input value={addForm.company || ''} onChange={e => setAddForm(f => ({ ...f, company: e.target.value }))}
+                    placeholder="Company name"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Email</label>
+                  <input type="email" value={addForm.email || ''} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                    placeholder="email@example.com"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Phone</label>
+                  <input value={addForm.phone || ''} onChange={e => setAddForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="+91 XXXXX XXXXX"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Job Title</label>
+                  <input value={addForm.job_title || ''} onChange={e => setAddForm(f => ({ ...f, job_title: e.target.value }))}
+                    placeholder="e.g. CEO, Director"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
+              </div>
+
+              {/* Right col */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Source <span className="text-red-500">*</span></label>
+                  <select value={addForm.source || 'Website'} onChange={e => setAddForm(f => ({ ...f, source: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400">
+                    {availableSources.map(s => <option key={s} value={s}>{s}</option>)}
+                    <option value="__custom__">✏️ Type a custom source…</option>
+                  </select>
+                  {addForm.source === '__custom__' && (
+                    <div className="mt-2">
+                      <input
+                        value={addCustomSource}
+                        onChange={e => setAddCustomSource(e.target.value)}
+                        placeholder="e.g. Referral, LinkedIn, Cold Call…"
+                        className="w-full px-3 py-2 text-sm border border-green-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/30" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Status</label>
+                  <select value={addForm.status || ''} onChange={e => setAddForm(f => ({ ...f, status: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400">
+                    <option value="">— Select —</option>
+                    {statusOpts.map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Priority</label>
+                  <select value={addForm.priority || ''} onChange={e => setAddForm(f => ({ ...f, priority: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400">
+                    <option value="">— Select —</option>
+                    {priorityOpts.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Assigned To</label>
+                  <select value={addForm.assigned_to || ''} onChange={e => setAddForm(f => ({ ...f, assigned_to: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400">
+                    <option value="">— Unassigned —</option>
+                    {assignedOpts.map(a => <option key={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Follow-up Date</label>
+                  <input type="datetime-local" value={addForm.follow_up_at || ''} onChange={e => setAddForm(f => ({ ...f, follow_up_at: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
+              </div>
+
+              {/* Message full width */}
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-[#6B778C] mb-1">Message / Notes</label>
+                <textarea value={addForm.message || ''} onChange={e => setAddForm(f => ({ ...f, message: e.target.value }))}
+                  placeholder="Any notes about this lead..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400 resize-none" />
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="px-6 py-4 border-t border-[#E6EBF2] flex items-center justify-end gap-3">
+              <button onClick={() => setAddModalOpen(false)}
+                className="px-4 py-2 text-sm text-[#6B778C] hover:text-[#2F3542] font-semibold transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleAddLead} disabled={adding}
+                className="flex items-center gap-2 px-5 py-2 text-sm bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 disabled:opacity-60 transition-colors">
+                <Plus size={14} />{adding ? 'Adding...' : 'Add Lead'}
+              </button>
+            </div>
+            </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* DB warning */}
       {!dbReady && (
         <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm">
@@ -215,8 +439,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
           <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}
             className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
             <option value="All">All Sources</option>
-            <option>Website</option>
-            <option>Meta</option>
+            {availableSources.map(s => <option key={s}>{s}</option>)}
           </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
             className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
@@ -275,6 +498,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
             className="flex items-center gap-2 px-4 py-2 text-sm bg-[#2F6BFF] text-white font-bold rounded-lg hover:bg-[#1A4FCC] transition-colors ml-auto">
             <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
             {syncing ? 'Syncing...' : 'Sync Sheets'}
+          </button>
+          <button
+            onClick={() => { setAddForm(emptyAddForm()); setAddModalOpen(true) }}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors"
+          >
+            <Plus size={14} /> Add Lead
           </button>
         </div>
 

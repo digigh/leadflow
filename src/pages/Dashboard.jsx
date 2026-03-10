@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { Target, Users, BarChart2, LogOut, Menu, Moon, Sun, Bell, X, RefreshCw, Sparkles, CalendarClock, Settings } from 'lucide-react'
+import { Target, Users, BarChart2, LogOut, Menu, Moon, Sun, Bell, X, RefreshCw, Sparkles, CalendarClock, Settings, CalendarCheck, Upload } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { MOCK_LEADS } from '../lib/constants'
 import { syncGoogleSheets } from '../lib/sheets'
@@ -7,6 +7,8 @@ import { loadSettings, saveSettings } from '../lib/settings'
 import LeadsTab from './LeadsTab'
 import AnalyticsTab from './AnalyticsTab'
 import SettingsTab from './SettingsTab'
+import FollowUpsTab from './FollowUpsTab'
+import ImportTab from './ImportTab'
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000   // auto-poll every 5 minutes
 const LIVE_HIGHLIGHT_MS = 60 * 1000       // highlight new leads for 1 minute
@@ -196,6 +198,8 @@ export default function Dashboard({ onLogout }) {
         <nav className="flex-1 py-4 px-2 overflow-y-auto">
           {[
             ['leads', Users, 'Lead Management'],
+            ['followups', CalendarCheck, 'Follow-ups'],
+            ['import', Upload, 'Import Leads'],
             ['analytics', BarChart2, 'Analytics'],
             ['settings', Settings, 'Settings'],
           ].map(([id, Icon, label]) => (
@@ -230,7 +234,11 @@ export default function Dashboard({ onLogout }) {
             </button>
             <div>
               <h1 className={`text-base font-bold ${t.text}`}>
-                {activeTab === 'leads' ? 'Lead Management' : activeTab === 'analytics' ? 'Analytics Dashboard' : 'Settings'}
+                {activeTab === 'leads' ? 'Lead Management'
+                  : activeTab === 'analytics' ? 'Analytics Dashboard'
+                  : activeTab === 'followups' ? 'Follow-ups'
+                  : activeTab === 'import' ? 'Import Leads'
+                  : 'Settings'}
               </h1>
               <p className={`text-xs ${t.subtext}`}>
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -366,6 +374,7 @@ export default function Dashboard({ onLogout }) {
                               <div className="flex-1 min-w-0">
                                 <p className={`text-xs font-bold ${t.text} truncate`}>{l.lead_name || '—'}</p>
                                 <p className={`text-[10px] ${t.subtext} mt-0.5`}>{l.company || l.source || '—'}</p>
+                                <p className={`text-[10px] ${t.subtext} mt-0.5`}>👤 {l.assigned_to || 'Unassigned'}</p>
                               </div>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${isPast ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
                                 }`}>
@@ -411,6 +420,10 @@ export default function Dashboard({ onLogout }) {
               newLeadIds={newLeadIds}
               settings={settings}
             />
+          ) : activeTab === 'followups' ? (
+            <FollowUpsTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} />
+          ) : activeTab === 'import' ? (
+            <ImportTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} />
           ) : activeTab === 'analytics' ? (
             <AnalyticsTab leads={leads} darkMode={darkMode} settings={settings} />
           ) : (
