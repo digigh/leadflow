@@ -8,9 +8,15 @@ const fetchSheet = async (sheetName) => {
     const res = await fetch(url);
     const text = await res.text();
     const match = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/);
-    if (!match) return [];
+    if (!match) return { cols: [], rows: [] };
     const data = JSON.parse(match[1]);
-    return data.table.rows;
+
+    if (data.status === 'error' || !data?.table?.rows) {
+        console.warn(`Could not fetch sheet: ${sheetName}`);
+        return { cols: [], rows: [] };
+    }
+
+    return { cols: data.table.cols || [], rows: data.table.rows };
 };
 
 export const syncGoogleSheets = async () => {
@@ -18,24 +24,35 @@ export const syncGoogleSheets = async () => {
         const allLeads = [];
 
         // Helper to dynamically parse a sheet based on expected header keywords
-        const parseSheetData = (rows, sourceName, headerKeywords) => {
+        const parseSheetData = (sheetResult, sourceName, headerKeywords) => {
+            const rows = sheetResult.rows || [];
+            const cols = sheetResult.cols || [];
             let headerRowIndex = -1;
             let colMap = {};
 
-            for (let i = 0; i < rows.length; i++) {
-                const rowVals = rows[i].c?.map(cell => (cell ? (cell.v || '').toString().toLowerCase() : '')) || [];
-                if (headerKeywords.some(kw => rowVals.includes(kw))) {
-                    headerRowIndex = i;
-                    rowVals.forEach((val, idx) => {
-                        if (val) colMap[val] = idx;
-                    });
-                    break;
+            // Check if headers are in cols array
+            const colLabels = cols.map(c => (c.label || '').toLowerCase());
+            if (headerKeywords.some(kw => colLabels.includes(kw))) {
+                colLabels.forEach((val, idx) => {
+                    if (val) colMap[val] = idx;
+                });
+            } else {
+                // Fallback to searching inside rows
+                for (let i = 0; i < rows.length; i++) {
+                    const rowVals = rows[i].c?.map(cell => (cell ? (cell.v || '').toString().toLowerCase() : '')) || [];
+                    if (headerKeywords.some(kw => rowVals.includes(kw))) {
+                        headerRowIndex = i;
+                        rowVals.forEach((val, idx) => {
+                            if (val) colMap[val] = idx;
+                        });
+                        break;
+                    }
                 }
             }
 
             const parsedLeads = [];
-            if (headerRowIndex !== -1) {
-                const dataRows = rows.slice(headerRowIndex + 1);
+            if (Object.keys(colMap).length > 0) {
+                const dataRows = headerRowIndex !== -1 ? rows.slice(headerRowIndex + 1) : rows;
                 dataRows.forEach(row => {
                     const c = row.c || [];
                     const getVal = (colNames) => {
@@ -58,7 +75,12 @@ export const syncGoogleSheets = async () => {
                     }
 
                     let phone = getVal(['phone', 'phone_number', 'phone number']);
-                    if (phone.startsWith('p:')) phone = phone.substring(2);
+                    if (phone && typeof phone === 'string' && phone.startsWith('p:')) phone = phone.substring(2);
+                    if (phone && typeof phone !== 'string') phone = phone.toString();
+                    if (!phone && c[colMap['phone number']] && c[colMap['phone number']].f) {
+                        phone = c[colMap['phone number']].f;
+                    }
+                    if (phone) phone = phone.replace(/\D/g, '');
 
                     let email = getVal(['email', 'email_address', 'email address']);
                     let company = getVal(['company_name', 'company', 'organization name', 'organisation name']);
@@ -82,16 +104,19 @@ export const syncGoogleSheets = async () => {
                     }
 
                     if (name && name !== 'Unknown' && name !== 'first_name last_name' && email !== 'email') {
-                        parsedLeads.push({
-                            lead_name: name,
-                            company: company,
-                            email: email,
-                            phone: phone,
-                            job_title: job_title,
-                            message: message,
-                            date: date,
-                            source: sourceName,
-                        });
+                        // Allow if there is an email OR a phone number
+                        if (email || phone) {
+                            parsedLeads.push({
+                                lead_name: name,
+                                company: company,
+                                email: email,
+                                phone: phone,
+                                job_title: job_title,
+                                message: message,
+                                date: date,
+                                source: sourceName,
+                            });
+                        }
                     }
                 });
             }
@@ -100,8 +125,8 @@ export const syncGoogleSheets = async () => {
 
         // 1. Fetch Website Leads (Sheet1)
         try {
-            const websiteRows = await fetchSheet('Sheet1');
-            const websiteLeads = parseSheetData(websiteRows, 'Website', ['name', 'email', 'phone number']);
+            const websiteResult = await fetchSheet('Sheet1');
+            const websiteLeads = parseSheetData(websiteResult, 'Website', ['name', 'email', 'phone number']);
             allLeads.push(...websiteLeads);
         } catch (e) {
             console.warn('Could not fetch Website Leads', e);
@@ -109,15 +134,19 @@ export const syncGoogleSheets = async () => {
 
         // 2. Fetch Meta Leads
         try {
-            const metaRows = await fetchSheet('Meta Leads');
-            const metaLeads = parseSheetData(metaRows, 'Meta', ['full_name', 'email', 'phone', 'first_name']);
-            // Override the date to be the exact time it was pulled from Google Sheet
-            const fetchTime = new Date().toISOString();
-            const timestampedMetaLeads = metaLeads.map(lead => ({
-                ...lead,
-                date: fetchTime
-            }));
-            allLeads.push(...timestampedMetaLeads);
+            const metaResult = await fetchSheet('Meta Lead');
+
+            if (metaResult.rows && metaResult.rows.length > 0) {
+                // Meta lead columns can be name, full_name, email, phone, etc. Let's cover possible values
+                const metaLeads = parseSheetData(metaResult, 'Meta', ['full_name', 'name', 'email', 'phone', 'first_name', 'phone number']);
+                // Override the date to be the exact time it was pulled from Google Sheet
+                const fetchTime = new Date().toISOString();
+                const timestampedMetaLeads = metaLeads.map(lead => ({
+                    ...lead,
+                    date: fetchTime
+                }));
+                allLeads.push(...timestampedMetaLeads);
+            }
         } catch (e) {
             console.warn("Could not fetch Meta Leads", e);
         }
@@ -126,15 +155,25 @@ export const syncGoogleSheets = async () => {
         const { data: existing } = await supabase.from('leads').select('email, phone, lead_name');
 
         const newLeads = allLeads.filter(l => {
-            return !existing?.some(e =>
-                (l.email && e.email === l.email) ||
-                (l.phone && e.phone === l.phone && e.lead_name === l.lead_name)
-            );
+            const cleanPhone = String(l.phone || '').replace(/\D/g, '');
+            return !existing?.some(e => {
+                const eCleanPhone = String(e.phone || '').replace(/\D/g, '');
+                return (
+                    (l.email && e.email && e.email === l.email) ||
+                    (cleanPhone && eCleanPhone && eCleanPhone === cleanPhone && e.lead_name === l.lead_name)
+                );
+            });
         });
 
         if (newLeads.length > 0) {
+            console.log("FRONTEND SYNC: Inserting these leads:", newLeads);
             const { error } = await supabase.from('leads').insert(newLeads);
-            if (error) throw error;
+            if (error) {
+                console.error("FRONTEND SYNC SUPABASE ERROR:", error);
+                throw error;
+            }
+        } else {
+            console.log("FRONTEND SYNC: No new leads to insert.");
         }
 
         return { success: true, count: newLeads.length };

@@ -325,9 +325,19 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                       {/* Contact */}
                       {isColVisible('contact') && (
                         <td className="px-4 py-3">
-                          <div className="text-xs text-[#6B778C] space-y-0.5">
-                            <div className="flex items-center gap-1"><Mail size={10} /><span className="truncate max-w-28">{lead.email}</span></div>
-                            <div className="flex items-center gap-1"><Phone size={10} />{lead.phone}</div>
+                          <div className="text-xs space-y-1.5 pl-1">
+                            {lead.email && (
+                              <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-md font-medium w-fit border border-blue-100/50 dark:border-blue-500/20 shadow-sm">
+                                <Mail size={11} className="shrink-0" />
+                                <span>{lead.email}</span>
+                              </div>
+                            )}
+                            {lead.phone && (
+                              <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 rounded-md font-medium w-fit border border-green-100/50 dark:border-green-500/20 shadow-sm">
+                                <Phone size={11} className="shrink-0" />
+                                <span>{lead.phone}</span>
+                              </div>
+                            )}
                           </div>
                         </td>
                       )}

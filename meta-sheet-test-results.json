@@ -1,0 +1,155 @@
+{
+  "Meta Lead Subsheet": {
+    "rowsCount": 57,
+    "sampleRows": [
+      {
+        "c": [
+          {
+            "v": "abc"
+          },
+          {
+            "v": "abc"
+          },
+          {
+            "v": "abc@gmail.com"
+          },
+          {
+            "v": 12345678990,
+            "f": "12345678990"
+          },
+          {
+            "v": "abcdefghewrtyu"
+          },
+          {
+            "v": "2025-12-02T09:15:24.022Z"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "GAMIT PRABHATKUMAR PANJIBHAI"
+          },
+          {
+            "v": "SD TECH "
+          },
+          {
+            "v": "prabhatgamit24@gmail.com"
+          },
+          {
+            "v": 9327741678,
+            "f": "9327741678"
+          },
+          {
+            "v": "I m interested "
+          },
+          {
+            "v": "2025-12-03T06:08:25.630Z"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "ankush"
+          },
+          {
+            "v": "digicides"
+          },
+          {
+            "v": "aspirex99@gnail.com"
+          },
+          {
+            "v": 6395687260,
+            "f": "6395687260"
+          },
+          {
+            "v": "Testing WhatsApp Trigger"
+          },
+          {
+            "v": "2025-12-03T19:44:03.393Z"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "Dean"
+          },
+          {
+            "v": "Digicides Marketing Services Pvt Ltd"
+          },
+          {
+            "v": "dean@digicides.com"
+          },
+          {
+            "v": 7042111085,
+            "f": "7042111085"
+          },
+          {
+            "v": "Test the water"
+          },
+          {
+            "v": "2025-12-04T04:49:05.140Z"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "Saswati"
+          },
+          {
+            "v": "Digi"
+          },
+          {
+            "v": "saswato@digicides.com"
+          },
+          {
+            "v": 7042111086,
+            "f": "7042111086"
+          },
+          {
+            "v": "Testing the WhatsApp integration "
+          },
+          {
+            "v": "2025-12-04T04:49:24.164Z"
+          }
+        ]
+      }
+    ],
+    "cols": [
+      {
+        "id": "A",
+        "label": "Name",
+        "type": "string"
+      },
+      {
+        "id": "B",
+        "label": "Organization Name",
+        "type": "string"
+      },
+      {
+        "id": "C",
+        "label": "Email",
+        "type": "string"
+      },
+      {
+        "id": "D",
+        "label": "Phone Number",
+        "type": "number",
+        "pattern": "General"
+      },
+      {
+        "id": "E",
+        "label": "Message Content",
+        "type": "string"
+      },
+      {
+        "id": "F",
+        "label": "Date Time",
+        "type": "string"
+      }
+    ]
+  }
+}

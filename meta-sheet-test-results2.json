@@ -1,0 +1,129 @@
+{
+  "Meta Lead": {
+    "rowsCount": 846,
+    "sampleRows": [
+      {
+        "c": [
+          {
+            "v": "full_name"
+          },
+          {
+            "v": "email"
+          },
+          {
+            "v": "phone"
+          },
+          {
+            "v": "company_name"
+          },
+          {
+            "v": "job_title"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "Navin Patil"
+          },
+          {
+            "v": "winavin@gmail.com"
+          },
+          {
+            "v": "p:+918390576579"
+          },
+          {
+            "v": "abcdesign"
+          },
+          {
+            "v": "Founder"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "Kiran Kiru"
+          },
+          {
+            "v": "kiranmckiru8@gamail.com"
+          },
+          {
+            "v": "p:+919844180931"
+          },
+          {
+            "v": "SBI"
+          },
+          {
+            "v": "LAST  WORKING IN SBI"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "ꜱᴡᴀʀᴏᴏᴘ ɴɪᴋᴀᴍ"
+          },
+          {
+            "v": "swaroopnikam2525@gmail.com"
+          },
+          {
+            "v": "p:+917588762525"
+          },
+          {
+            "v": "Karyon organic"
+          },
+          {
+            "v": "Project Officer"
+          }
+        ]
+      },
+      {
+        "c": [
+          {
+            "v": "Sajjan jaiswal"
+          },
+          {
+            "v": "agrigenitka@gmail.com"
+          },
+          {
+            "v": "p:+919431269655"
+          },
+          {
+            "v": "kinjal muskan enterprises"
+          },
+          {
+            "v": "proprietor"
+          }
+        ]
+      }
+    ],
+    "cols": [
+      {
+        "id": "A",
+        "label": "",
+        "type": "string"
+      },
+      {
+        "id": "B",
+        "label": "",
+        "type": "string"
+      },
+      {
+        "id": "C",
+        "label": "",
+        "type": "string"
+      },
+      {
+        "id": "D",
+        "label": "",
+        "type": "string"
+      },
+      {
+        "id": "E",
+        "label": "",
+        "type": "string"
+      }
+    ]
+  }
+}
