@@ -7,7 +7,7 @@ const FEATURES = [
     bg: '#EFF6FF',
     accent: '#2563EB',
     title: 'Centralized Lead Inbox',
-    desc: 'All leads from Website forms and Meta Ads flow into one unified table — no more juggling spreadsheets.',
+    desc: 'All leads from Website forms, Meta Ads, and Landing Pages flow into one unified table — no more juggling spreadsheets.',
   },
   {
     icon: Filter,
@@ -52,7 +52,7 @@ const FEATURES = [
 ]
 
 const STEPS = [
-  { n: '01', title: 'Connect Your Sources', desc: 'Link your Google Sheet with Website & Meta lead data.' },
+  { n: '01', title: 'Connect Your Sources', desc: 'Link your Google Sheet with Website, Meta & Landing Page lead data.' },
   { n: '02', title: 'Auto-Sync & Notify', desc: 'Leads pull in automatically. Bell alerts you of new arrivals.' },
   { n: '03', title: 'Assign & Track', desc: 'Set Priority, Owner, and Status — your team works the pipeline.' },
   { n: '04', title: 'Analyse & Convert', desc: 'Monitor charts and conversion rates to close more deals.' },
@@ -181,7 +181,7 @@ export default function HomePage({ onNavigate }) {
 
           {/* Subtext */}
           <p className="f3 max-w-2xl mx-auto mb-12 leading-relaxed" style={{ color: '#BAE6FD', fontSize: '1.1rem' }}>
-            Capture leads from Website & Meta Ads, assign them to your team,
+            Capture leads from Website, Meta Ads & Landing Pages, assign them to your team,
             track every stage of the pipeline, and close more deals — all in one beautifully simple platform.
           </p>
 

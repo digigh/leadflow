@@ -21,7 +21,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   // Dynamic source filter — derived from actual lead data (incl. any custom sources from imports)
   const availableSources = useMemo(() => {
     const fromLeads = [...new Set((leads || []).map(l => l.source).filter(Boolean))]
-    const base = ['Website', 'Meta']
+    const base = ['Website', 'Meta', 'Landing Page 2']
     return [...new Set([...base, ...fromLeads])].sort()
   }, [leads])
 

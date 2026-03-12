@@ -195,10 +195,34 @@ export default function SettingsTab({ settings, onSettingsChange }) {
                     />
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-2.5">
                         <AlertCircle size={15} className="text-amber-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-700 leading-relaxed">
-                            Changes take effect immediately after clicking <strong>Save Settings</strong>.
-                            Leads already assigned a deleted option will keep that value — only new assignments will use the updated list.
-                        </p>
+                        <div className="space-y-3 w-full">
+                            <p className="text-xs text-amber-700 leading-relaxed">
+                                Changes take effect immediately after clicking <strong>Save Settings</strong>.
+                                Leads already assigned a deleted option will keep that value — only new assignments will use the updated list.
+                            </p>
+                            <div className="w-full h-px bg-amber-200/60" />
+                            <div>
+                                <p className="text-xs text-amber-900 font-bold mb-1">
+                                    🚀 Getting "Check Constraint" Database Errors?
+                                </p>
+                                <p className="text-xs text-amber-800 leading-relaxed mb-2">
+                                    If leads fail to save with your new custom status, Supabase is blocking it. Run this to allow any custom status:
+                                </p>
+                                <div className="bg-white border border-amber-200 rounded-lg p-3 relative group">
+                                    <pre className="text-[11px] font-mono text-amber-900 whitespace-pre-wrap select-all">ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_status_check;
+ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_priority_check;</pre>
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            navigator.clipboard.writeText('ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_status_check;\nALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_priority_check;');
+                                        }}
+                                        className="absolute top-2 right-2 text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all font-bold shadow-sm"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </SectionCard>

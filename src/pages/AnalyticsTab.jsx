@@ -47,6 +47,7 @@ export default function AnalyticsTab({ leads, settings = {} }) {
   const sourceData = [
     { name: 'Website', value: filteredLeads.filter(l => l.source === 'Website').length },
     { name: 'Meta', value: filteredLeads.filter(l => l.source === 'Meta').length },
+    { name: 'Landing Page 2', value: filteredLeads.filter(l => l.source === 'Landing Page 2').length },
   ]
 
   const priorityData = Object.entries(
@@ -146,6 +147,7 @@ export default function AnalyticsTab({ leads, settings = {} }) {
           <>
             <MetricCard icon={Globe} label="Website Leads" value={sourceData[0].value} trend={1} trendVal={10} color="#7B3FFF" />
             <MetricCard icon={Activity} label="Meta Leads" value={sourceData[1].value} color="#F5A623" />
+            <MetricCard icon={Users} label="Landing Page" value={sourceData[2].value} color="#2ECC71" />
           </>
         )}
       </div>
@@ -234,7 +236,7 @@ export default function AnalyticsTab({ leads, settings = {} }) {
               <PieChart>
                 <Pie data={sourceData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={5} dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                  <Cell fill="#2F6BFF" /><Cell fill="#7B3FFF" />
+                  <Cell fill="#2F6BFF" /><Cell fill="#7B3FFF" /><Cell fill="#2ECC71" />
                 </Pie>
                 <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E6EBF2' }} />
               </PieChart>
@@ -242,7 +244,7 @@ export default function AnalyticsTab({ leads, settings = {} }) {
             <div className="flex justify-center gap-6 mt-2">
               {sourceData.map((s, i) => (
                 <div key={s.name} className="flex items-center gap-2 text-sm">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: i === 0 ? '#2F6BFF' : '#7B3FFF' }} />
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: i === 0 ? '#2F6BFF' : i === 1 ? '#7B3FFF' : '#2ECC71' }} />
                   <span className="font-semibold text-[#2F3542]">{s.name}</span>
                   <span className="text-[#9AA5B1]">({s.value})</span>
                 </div>

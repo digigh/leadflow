@@ -97,7 +97,7 @@ export default function ImportTab({ leads = [], setLeads, dbReady = false, darkM
   const assignedOpts = settings.assignedOptions || []
   const knownSources = useMemo(() => {
     const fromLeads = [...new Set(leads.map(l => l.source).filter(Boolean))]
-    const base = ['Website', 'Meta']
+    const base = ['Website', 'Meta', 'Landing Page 2']
     return [...new Set([...base, ...fromLeads])]
   }, [leads])
 

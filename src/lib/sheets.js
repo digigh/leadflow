@@ -1,6 +1,7 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase.js';
 
-const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
+const env = typeof process !== 'undefined' ? process.env : (import.meta && import.meta.env ? import.meta.env : {});
+const SHEET_ID = env.VITE_GOOGLE_SHEET_ID || '152DaLI6uPMR2fFKb38eJwpXsATTFA8uBCzIyM1plDy0'; 
 
 const fetchSheet = async (sheetName) => {
     if (!SHEET_ID) throw new Error('Google Sheet ID not configured in .env');
@@ -67,10 +68,10 @@ export const syncGoogleSheets = async () => {
                     };
 
                     let name = getVal(['full_name', 'name', 'lead_name']);
-                    // Meta leads specific logic for first_name/last_name
+                    // Meta and Landing Page specific logic for first_name/last_name
                     if (!name) {
-                        const fName = getVal(['first_name']);
-                        const lName = getVal(['last_name']);
+                        const fName = getVal(['first_name', 'first name']);
+                        const lName = getVal(['last_name', 'last name']);
                         if (fName || lName) name = `${fName} ${lName}`.trim();
                     }
 
@@ -87,7 +88,7 @@ export const syncGoogleSheets = async () => {
                     let job_title = getVal(['job_title', 'job title']);
                     let message = getVal(['message', 'message content', 'inquiry']);
 
-                    let dateStr = getVal(['date', 'created_time', 'date time']);
+                    let dateStr = getVal(['date', 'created_time', 'date time', 'date and time']);
                     let date = null;
                     if (dateStr) {
                         const match = dateStr.match(/^Date\((.*)\)$/);
@@ -151,7 +152,20 @@ export const syncGoogleSheets = async () => {
             console.warn("Could not fetch Meta Leads", e);
         }
 
-        // 3. Upsert to Supabase
+        // 3. Fetch Landing Page 2 Leads
+        try {
+            const landingPage2Result = await fetchSheet('Landing Page 2');
+            
+            if (landingPage2Result.rows && landingPage2Result.rows.length > 0) {
+                const landingPageLeads = parseSheetData(landingPage2Result, 'Landing Page 2', ['first name', 'last name', 'email', 'phone number', 'company', 'job title', 'message', 'date and time']);
+                console.log("DEBUG LandingPageLeads:", landingPageLeads);
+                allLeads.push(...landingPageLeads);
+            }
+        } catch (e) {
+            console.warn("Could not fetch Landing Page 2 Leads", e);
+        }
+
+        // 4. Upsert to Supabase
         const { data: existing } = await supabase.from('leads').select('email, phone, lead_name');
 
         const newLeads = allLeads.filter(l => {
