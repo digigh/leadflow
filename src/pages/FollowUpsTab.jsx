@@ -4,7 +4,7 @@ import {
   Building2, Mail, Phone, Globe, Facebook, User, Edit2, Save, X
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { StatusBadge, PriorityBadge, Toast } from '../components/UI'
+import { StatusBadge, PriorityBadge, Toast, ElegantDateTimeInput, formatToLocalDatetime, toISODatetime } from '../components/UI'
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, ASSIGNED_OPTIONS } from '../lib/constants'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
       status: lead.status || '',
       assigned_to: lead.assigned_to || '',
       priority: lead.priority || '',
-      follow_up_at: lead.follow_up_at ? lead.follow_up_at.slice(0, 16) : '',
+      follow_up_at: lead.follow_up_at ? formatToLocalDatetime(lead.follow_up_at) : '',
       feedback: lead.feedback || '',
       remarks: lead.remarks || '',
     })
@@ -99,10 +99,10 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
   const handleSave = async (id) => {
     setSaving(true)
     const payload = {
-      status: editData.status || null,
-      assigned_to: editData.assigned_to || null,
-      priority: editData.priority || null,
-      follow_up_at: editData.follow_up_at || null,
+      status: editData.status ? editData.status : null,
+      assigned_to: editData.assigned_to ? editData.assigned_to : null,
+      priority: editData.priority ? editData.priority : null,
+      follow_up_at: editData.follow_up_at ? toISODatetime(editData.follow_up_at) : null,
       feedback: editData.feedback || null,
       remarks: editData.remarks || null,
     }
@@ -320,9 +320,12 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
                       {/* Follow-up Time */}
                       <td className="px-4 py-3" onClick={e => isEditing && e.stopPropagation()}>
                         {isEditing ? (
-                          <input type="datetime-local" value={editData.follow_up_at}
+                          <ElegantDateTimeInput 
+                            value={editData.follow_up_at}
                             onChange={e => setEditData(d => ({ ...d, follow_up_at: e.target.value }))}
-                            className={`text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF] w-40 ${t.input}`} />
+                            className="w-44" 
+                            darkMode={darkMode} 
+                          />
                         ) : (
                           <span className={`inline-flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${classStyle(cls)}`}>
                             <span>{classLabel(cls)}</span>

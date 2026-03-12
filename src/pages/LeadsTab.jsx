@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Fragment, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { MOCK_LEADS, STATUS_OPTIONS, PRIORITY_OPTIONS, ASSIGNED_OPTIONS } from '../lib/constants'
-import { StatusBadge, PriorityBadge, MetricCard, Toast } from '../components/UI'
+import { StatusBadge, PriorityBadge, MetricCard, Toast, ElegantDateTimeInput, formatToLocalDatetime, toISODatetime } from '../components/UI'
 import {
   Users, CheckCircle, Star, Clock, Search, RefreshCw,
   Globe, Facebook, Building2, Mail, Phone, Edit2, Save, X, AlertTriangle,
@@ -85,12 +85,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       email: addForm.email || null,
       phone: addForm.phone || null,
       job_title: addForm.job_title || null,
-      source: addEffectiveSource,          // custom or selected value
+      source: addEffectiveSource || null,          // custom or selected value
       message: addForm.message || null,
-      status: addForm.status || null,
-      priority: addForm.priority || null,
-      assigned_to: addForm.assigned_to || null,
-      follow_up_at: addForm.follow_up_at || null,
+      status: addForm.status ? addForm.status : null,
+      priority: addForm.priority ? addForm.priority : null,
+      assigned_to: addForm.assigned_to ? addForm.assigned_to : null,
+      follow_up_at: addForm.follow_up_at ? toISODatetime(addForm.follow_up_at) : null,
       date: new Date().toISOString(),
     }
     if (dbReady) {
@@ -116,18 +116,18 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   const handleSave = async (id) => {
     setSaving(true)
     const corePayload = {
-      status: editData.status || null,
+      status: editData.status ? editData.status : null,
       feedback: editData.feedback || null,
       remarks: editData.remarks || null,
-      assigned_to: editData.assigned_to || null,
-      priority: editData.priority || null,
+      assigned_to: editData.assigned_to ? editData.assigned_to : null,
+      priority: editData.priority ? editData.priority : null,
     }
     customCols.forEach(col => {
-      corePayload[col.key] = editData[col.key] || null
+      corePayload[col.key] = (col.type === 'date' && editData[col.key]) ? toISODatetime(editData[col.key]) : (editData[col.key] || null)
     })
     const fullPayload = {
       ...corePayload,
-      follow_up_at: editData.follow_up_at || null,
+      follow_up_at: editData.follow_up_at ? toISODatetime(editData.follow_up_at) : null,
     }
 
     if (dbReady) {
@@ -173,10 +173,10 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       remarks: lead.remarks || '',
       assigned_to: lead.assigned_to || '',
       priority: lead.priority || '',
-      follow_up_at: lead.follow_up_at ? lead.follow_up_at.slice(0, 16) : '',
+      follow_up_at: lead.follow_up_at ? formatToLocalDatetime(lead.follow_up_at) : '',
     }
     customCols.forEach(c => {
-      initEditData[c.key] = lead[c.key] || ''
+      initEditData[c.key] = (c.type === 'date' && lead[c.key]) ? formatToLocalDatetime(lead[c.key]) : (lead[c.key] || '')
     })
     setEditData(initEditData)
     setExpandedRow(lead.id) // auto-expand so feedback/remarks are visible
@@ -372,8 +372,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#6B778C] mb-1">Follow-up Date</label>
-                  <input type="datetime-local" value={addForm.follow_up_at || ''} onChange={e => setAddForm(f => ({ ...f, follow_up_at: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                  <ElegantDateTimeInput value={addForm.follow_up_at || ''} onChange={e => setAddForm(f => ({ ...f, follow_up_at: e.target.value }))} className="w-full" darkMode={darkMode} />
                 </div>
               </div>
 
@@ -592,11 +591,11 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                       {isColVisible('follow_up_at') && (
                         <td className="px-4 py-3" onClick={e => editingId === lead.id && e.stopPropagation()}>
                           {editingId === lead.id
-                            ? <input
-                              type="datetime-local"
+                            ? <ElegantDateTimeInput
                               value={editData.follow_up_at}
                               onChange={e => setEditData(d => ({ ...d, follow_up_at: e.target.value }))}
-                              className="text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF] w-40"
+                              className="w-44"
+                              darkMode={darkMode}
                             />
                             : lead.follow_up_at ? (() => {
                               const fu = new Date(lead.follow_up_at)
@@ -663,12 +662,21 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                       {customCols.filter(col => isColVisible(col.key)).map(col => (
                         <td key={col.key} className="px-4 py-3 text-xs text-[#2F3542]" onClick={e => editingId === lead.id && e.stopPropagation()}>
                           {editingId === lead.id ? (
-                            <input
-                              type={col.type === 'date' ? 'datetime-local' : col.type === 'number' ? 'number' : 'text'}
-                              value={editData[col.key] || ''}
-                              onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))}
-                              className="w-24 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]"
-                            />
+                            col.type === 'date' ? (
+                              <ElegantDateTimeInput
+                                value={editData[col.key] || ''}
+                                onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))}
+                                className="w-40"
+                                darkMode={darkMode}
+                              />
+                            ) : (
+                              <input
+                                type={col.type === 'number' ? 'number' : 'text'}
+                                value={editData[col.key] || ''}
+                                onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))}
+                                className="w-24 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]"
+                              />
+                            )
                           ) : (
                             <span className="truncate max-w-28 block">
                               {col.type === 'date' && lead[col.key] ? new Date(lead[col.key]).toLocaleDateString() : (lead[col.key] || '—')}
