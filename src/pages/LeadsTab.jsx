@@ -545,9 +545,16 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                       {/* Company */}
                       {isColVisible('company') && (
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5 text-xs text-[#6B778C]">
-                            <Building2 size={11} /><span className="max-w-28 truncate">{lead.company}</span>
-                          </div>
+                          {lead.company ? (
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <Building2 size={11} className="text-[#6B778C] dark:text-[#9AA5B1] shrink-0" />
+                              <span className="font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 px-2 py-0.5 rounded-md whitespace-nowrap">
+                                {lead.company}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[#C5CDD8] dark:text-[#6B778C] text-xs">—</span>
+                          )}
                         </td>
                       )}
                       {/* Contact */}

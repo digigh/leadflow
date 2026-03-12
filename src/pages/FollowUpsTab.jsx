@@ -276,10 +276,20 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
 
                       {/* Company */}
                       <td className="px-4 py-3">
-                        <div className={`flex items-center gap-1.5 text-xs ${t.subtext}`}>
-                          <Building2 size={11} /><span className="max-w-28 truncate">{lead.company || '—'}</span>
-                        </div>
-                        <div className={`flex items-center gap-1 mt-0.5 text-[10px] ${t.subtext}`}>
+                        {lead.company ? (
+                          <div className="flex items-center gap-1.5 text-xs mb-1">
+                            <Building2 size={11} className={`shrink-0 ${t.subtext}`} />
+                            <span className={`font-semibold px-2 py-0.5 rounded-md border whitespace-nowrap ${darkMode ? 'bg-[#1E3A5F] text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                              {lead.company}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className={`flex items-center gap-1.5 text-xs mb-1 ${t.subtext}`}>
+                            <Building2 size={11} className="shrink-0" />
+                            <span>—</span>
+                          </div>
+                        )}
+                        <div className={`flex items-center gap-1 text-[10px] ${t.subtext}`}>
                           {lead.source === 'Website' ? <Globe size={9} /> : <Facebook size={9} />}
                           {lead.source || '—'}
                         </div>
