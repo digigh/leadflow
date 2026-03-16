@@ -64,7 +64,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
     lead_name: '', company: '', email: '', phone: '',
     job_title: '', source: 'Website', message: '',
     status: '', priority: '', assigned_to: '',
-    follow_up_at: '',
+    follow_up_at: '', business_type: '', looking_for: '', website: '',
   })
 
   // Effective source: if user typed custom, use that; otherwise use dropdown value
@@ -87,6 +87,9 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       job_title: addForm.job_title || null,
       source: addEffectiveSource || null,          // custom or selected value
       message: addForm.message || null,
+      business_type: addForm.business_type || null,
+      looking_for: addForm.looking_for || null,
+      website: addForm.website || null,
       status: addForm.status ? addForm.status : null,
       priority: addForm.priority ? addForm.priority : null,
       assigned_to: addForm.assigned_to ? addForm.assigned_to : null,
@@ -121,6 +124,9 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       remarks: editData.remarks || null,
       assigned_to: editData.assigned_to ? editData.assigned_to : null,
       priority: editData.priority ? editData.priority : null,
+      business_type: editData.business_type || null,
+      looking_for: editData.looking_for || null,
+      website: editData.website || null,
     }
     customCols.forEach(col => {
       corePayload[col.key] = (col.type === 'date' && editData[col.key]) ? toISODatetime(editData[col.key]) : (editData[col.key] || null)
@@ -173,6 +179,9 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       remarks: lead.remarks || '',
       assigned_to: lead.assigned_to || '',
       priority: lead.priority || '',
+      business_type: lead.business_type || '',
+      looking_for: lead.looking_for || '',
+      website: lead.website || '',
       follow_up_at: lead.follow_up_at ? formatToLocalDatetime(lead.follow_up_at) : '',
     }
     customCols.forEach(c => {
@@ -325,6 +334,18 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                     placeholder="e.g. CEO, Director"
                     className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Business Type</label>
+                  <input value={addForm.business_type || ''} onChange={e => setAddForm(f => ({ ...f, business_type: e.target.value }))}
+                    placeholder="e.g. Agri input brand"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Looking For</label>
+                  <input value={addForm.looking_for || ''} onChange={e => setAddForm(f => ({ ...f, looking_for: e.target.value }))}
+                    placeholder="e.g. Lead generation"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
+                </div>
               </div>
 
               {/* Right col */}
@@ -369,6 +390,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                     <option value="">— Unassigned —</option>
                     {assignedOpts.map(a => <option key={a}>{a}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#6B778C] mb-1">Website</label>
+                  <input value={addForm.website || ''} onChange={e => setAddForm(f => ({ ...f, website: e.target.value }))}
+                    placeholder="e.g. https://agrisheild.com"
+                    className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-green-400" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#6B778C] mb-1">Follow-up Date</label>
@@ -585,6 +612,42 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                           </span>
                         </td>
                       )}
+                      
+                      {/* Business Type */}
+                      {isColVisible('business_type') && (
+                        <td className="px-4 py-3 text-xs" onClick={e => editingId === lead.id && e.stopPropagation()}>
+                          {editingId === lead.id ? (
+                            <input value={editData.business_type} onChange={e => setEditData(d => ({ ...d, business_type: e.target.value }))}
+                              className="w-32 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]" />
+                          ) : (
+                            <span className="truncate max-w-32 block">{lead.business_type || '—'}</span>
+                          )}
+                        </td>
+                      )}
+
+                      {/* Looking For */}
+                      {isColVisible('looking_for') && (
+                        <td className="px-4 py-3 text-xs" onClick={e => editingId === lead.id && e.stopPropagation()}>
+                          {editingId === lead.id ? (
+                            <input value={editData.looking_for} onChange={e => setEditData(d => ({ ...d, looking_for: e.target.value }))}
+                              className="w-32 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]" />
+                          ) : (
+                            <span className="truncate max-w-32 block">{lead.looking_for || '—'}</span>
+                          )}
+                        </td>
+                      )}
+
+                      {/* Website */}
+                      {isColVisible('website') && (
+                        <td className="px-4 py-3 text-xs" onClick={e => editingId === lead.id && e.stopPropagation()}>
+                          {editingId === lead.id ? (
+                            <input value={editData.website} onChange={e => setEditData(d => ({ ...d, website: e.target.value }))}
+                              className="w-32 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]" />
+                          ) : (
+                            <span className="truncate max-w-32 block">{lead.website || '—'}</span>
+                          )}
+                        </td>
+                      )}
                       {/* Date */}
                       {isColVisible('date') && (
                         <td className="px-4 py-3 text-xs text-[#9AA5B1] whitespace-nowrap">
@@ -664,7 +727,6 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                           }
                         </td>
                       )}
-
                       {/* Custom Columns */}
                       {customCols.filter(col => isColVisible(col.key)).map(col => (
                         <td key={col.key} className="px-4 py-3 text-xs text-[#2F3542]" onClick={e => editingId === lead.id && e.stopPropagation()}>

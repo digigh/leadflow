@@ -87,6 +87,9 @@ export const syncGoogleSheets = async () => {
                     let company = getVal(['company_name', 'company', 'organization name', 'organisation name']);
                     let job_title = getVal(['job_title', 'job title']);
                     let message = getVal(['message', 'message content', 'inquiry']);
+                    let business_type = getVal(['business_type', 'business type', 'which_best_describes_your_business?', 'which best describes your business?', 'which best describes your business']);
+                    let looking_for = getVal(['looking_for', 'looking for', 'what_are_you_looking_for?', 'what are you looking for?', 'what are you looking for']);
+                    let website = getVal(['website', 'url', 'site']);
 
                     let dateStr = getVal(['date', 'created_time', 'date time', 'date and time']);
                     let date = null;
@@ -114,6 +117,9 @@ export const syncGoogleSheets = async () => {
                                 phone: phone,
                                 job_title: job_title,
                                 message: message,
+                                business_type: business_type,
+                                looking_for: looking_for,
+                                website: website,
                                 date: date,
                                 source: sourceName,
                             });
@@ -135,7 +141,7 @@ export const syncGoogleSheets = async () => {
 
         // 2. Fetch Meta Leads
         try {
-            const metaResult = await fetchSheet('Meta Lead');
+            const metaResult = await fetchSheet('Meta Lead Subsheet');
 
             if (metaResult.rows && metaResult.rows.length > 0) {
                 // Meta lead columns can be name, full_name, email, phone, etc. Let's cover possible values
@@ -165,7 +171,24 @@ export const syncGoogleSheets = async () => {
             console.warn("Could not fetch Landing Page 2 Leads", e);
         }
 
-        // 4. Upsert to Supabase
+        // 4. Fetch New Meta Leads March
+        try {
+            const newMetaResult = await fetchSheet('New Meta Leads March');
+
+            if (newMetaResult.rows && newMetaResult.rows.length > 0) {
+                const newMetaLeads = parseSheetData(newMetaResult, 'New Meta Leads March', ['full_name', 'name', 'email', 'phone']);
+                const fetchTime = new Date().toISOString();
+                const timestampedNewMetaLeads = newMetaLeads.map(lead => ({
+                    ...lead,
+                    date: fetchTime
+                }));
+                allLeads.push(...timestampedNewMetaLeads);
+            }
+        } catch (e) {
+            console.warn("Could not fetch New Meta Leads March", e);
+        }
+
+        // 5. Upsert to Supabase
         const { data: existing } = await supabase.from('leads').select('email, phone, lead_name');
 
         const newLeads = allLeads.filter(l => {

@@ -1,0 +1,1506 @@
+{
+  "cols": [
+    {
+      "id": "A",
+      "label": "Name",
+      "type": "string"
+    },
+    {
+      "id": "B",
+      "label": "Organization Name",
+      "type": "string"
+    },
+    {
+      "id": "C",
+      "label": "Email",
+      "type": "string"
+    },
+    {
+      "id": "D",
+      "label": "Phone Number",
+      "type": "number",
+      "pattern": "General"
+    },
+    {
+      "id": "E",
+      "label": "Message Content",
+      "type": "string"
+    },
+    {
+      "id": "F",
+      "label": "Date Time",
+      "type": "string"
+    }
+  ],
+  "rows": [
+    {
+      "c": [
+        {
+          "v": "abc"
+        },
+        {
+          "v": "abc"
+        },
+        {
+          "v": "abc@gmail.com"
+        },
+        {
+          "v": 12345678990,
+          "f": "12345678990"
+        },
+        {
+          "v": "abcdefghewrtyu"
+        },
+        {
+          "v": "2025-12-02T09:15:24.022Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "GAMIT PRABHATKUMAR PANJIBHAI"
+        },
+        {
+          "v": "SD TECH "
+        },
+        {
+          "v": "prabhatgamit24@gmail.com"
+        },
+        {
+          "v": 9327741678,
+          "f": "9327741678"
+        },
+        {
+          "v": "I m interested "
+        },
+        {
+          "v": "2025-12-03T06:08:25.630Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "ankush"
+        },
+        {
+          "v": "digicides"
+        },
+        {
+          "v": "aspirex99@gnail.com"
+        },
+        {
+          "v": 6395687260,
+          "f": "6395687260"
+        },
+        {
+          "v": "Testing WhatsApp Trigger"
+        },
+        {
+          "v": "2025-12-03T19:44:03.393Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Dean"
+        },
+        {
+          "v": "Digicides Marketing Services Pvt Ltd"
+        },
+        {
+          "v": "dean@digicides.com"
+        },
+        {
+          "v": 7042111085,
+          "f": "7042111085"
+        },
+        {
+          "v": "Test the water"
+        },
+        {
+          "v": "2025-12-04T04:49:05.140Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Saswati"
+        },
+        {
+          "v": "Digi"
+        },
+        {
+          "v": "saswato@digicides.com"
+        },
+        {
+          "v": 7042111086,
+          "f": "7042111086"
+        },
+        {
+          "v": "Testing the WhatsApp integration "
+        },
+        {
+          "v": "2025-12-04T04:49:24.164Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Ankita"
+        },
+        {
+          "v": "Digicides"
+        },
+        {
+          "v": "ankita.roy@gmail.com"
+        },
+        {
+          "v": 7908117847,
+          "f": "7908117847"
+        },
+        {
+          "v": "Need lead generation tool info."
+        },
+        {
+          "v": "2025-12-04T04:53:32.320Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Jeetaditya Das"
+        },
+        {
+          "v": "Digicides "
+        },
+        {
+          "v": "jeetaditya.das@gmail.com"
+        },
+        {
+          "v": 8447302576,
+          "f": "8447302576"
+        },
+        {
+          "v": "Test Test Test "
+        },
+        {
+          "v": "2025-12-04T05:17:24.696Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Shreya Mishra"
+        },
+        {
+          "v": "Digicides "
+        },
+        {
+          "v": "Shreya.mishra@digicides.com"
+        },
+        {
+          "v": 8317001690,
+          "f": "8317001690"
+        },
+        {
+          "v": "Need demo for all services"
+        },
+        {
+          "v": "2025-12-04T05:18:38.850Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Ankush"
+        },
+        {
+          "v": "Digicides"
+        },
+        {
+          "v": "ankush@gnail.com"
+        },
+        {
+          "v": 6395687260,
+          "f": "6395687260"
+        },
+        {
+          "v": "Testing again trigger"
+        },
+        {
+          "v": "2025-12-04T06:55:56.793Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Hemant"
+        },
+        {
+          "v": "Digicides"
+        },
+        {
+          "v": "hemant@gnail.com"
+        },
+        {
+          "v": 9924040902,
+          "f": "9924040902"
+        },
+        {
+          "v": "testing whatsapp template trigger"
+        },
+        {
+          "v": "2025-12-04T16:27:01.199Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "anand srivastava"
+        },
+        {
+          "v": "Tradologie "
+        },
+        {
+          "v": "anandsrivastava1612@gmail.com"
+        },
+        {
+          "v": 8800678431,
+          "f": "8800678431"
+        },
+        {
+          "v": "Hi.\nI would like to know about Digicides.\nHow it helps to generate leads.\n\nBest\nAnand\n8800678431"
+        },
+        {
+          "v": "2025-12-06T03:39:43.699Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "bhushan kishore"
+        },
+        {
+          "v": "Save eco organic pvt ltd"
+        },
+        {
+          "v": "bhushan.kishore@gmail.com"
+        },
+        {
+          "v": 8539977680,
+          "f": "8539977680"
+        },
+        {
+          "v": "Need for agri products marketing"
+        },
+        {
+          "v": "2025-12-07T16:48:07.164Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "NEKKANTI VENKATESH"
+        },
+        {
+          "v": "Tech4farm "
+        },
+        {
+          "v": "contact@tech4farm.com"
+        },
+        {
+          "v": 9182501717,
+          "f": "9182501717"
+        },
+        {
+          "v": "Call me once "
+        },
+        {
+          "v": "2025-12-11T07:28:37.472Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Divya"
+        },
+        {
+          "v": "Farmersanthe"
+        },
+        {
+          "v": "divyasachin1@outlook.com"
+        },
+        {
+          "v": 9972766048,
+          "f": "9972766048"
+        },
+        {
+          "v": "we need digital marketing support for our webpage. "
+        },
+        {
+          "v": "2025-12-11T07:50:29.636Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Arjan Bathla"
+        },
+        {
+          "v": "Green Line Seeds India Private limited "
+        },
+        {
+          "v": "greenlineseedspvtltd@gmail.com"
+        },
+        {
+          "v": 7657826767,
+          "f": "7657826767"
+        },
+        {
+          "v": "Interested"
+        },
+        {
+          "v": "2025-12-17T18:58:32.599Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Rattipally Divyanjali"
+        },
+        {
+          "v": "FARMROBO TECHNOLOGIES PVT LTD"
+        },
+        {
+          "v": "divyanjali.rattipally@farmrobo.in"
+        },
+        {
+          "v": 9391951261,
+          "f": "9391951261"
+        },
+        {
+          "v": "i want to get in touch and see where we align and start working"
+        },
+        {
+          "v": "2025-12-19T07:40:35.988Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Krishna Gavhane "
+        },
+        {
+          "v": "PRAKRUT FPC "
+        },
+        {
+          "v": "kkg3001@gmail.com"
+        },
+        {
+          "v": 9552424294,
+          "f": "9552424294"
+        },
+        {
+          "v": "Farmer Base Advertising "
+        },
+        {
+          "v": "2025-12-21T05:33:43.019Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Bibekananda Kanhar"
+        },
+        {
+          "v": "BIBEKANANDA SNM AGRO"
+        },
+        {
+          "v": "bibekanandak68@gmail.com"
+        },
+        {
+          "v": 8260882557,
+          "f": "8260882557"
+        },
+        {
+          "v": "Organic farming product sells service "
+        },
+        {
+          "v": "2025-12-23T07:23:05.332Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Anil Madariya"
+        },
+        {
+          "v": "Sawariya Agritech Pvt Ltd"
+        },
+        {
+          "v": "anil.madariya44@gmail.com"
+        },
+        {
+          "v": 9926789592,
+          "f": "9926789592"
+        },
+        {
+          "v": "Hi, I am willing to connect thousands of my retail customers on call in a single call frequently at the interval of 10 days.\nCan you please connect me for further details."
+        },
+        {
+          "v": "2025-12-25T11:45:43.116Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "shahnawaz"
+        },
+        {
+          "v": "adiz marketing solutions llp"
+        },
+        {
+          "v": "shahnawaz.d@adizconnect.com"
+        },
+        {
+          "v": 9967112116,
+          "f": "9967112116"
+        },
+        {
+          "v": "Need to look for an agency for telecalling farmers. "
+        },
+        {
+          "v": "2025-12-26T17:30:03.479Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Gursewak Singh "
+        },
+        {
+          "v": "Tillmate Multitech "
+        },
+        {
+          "v": "tillmatemultitech@gmail.com"
+        },
+        {
+          "v": 7888773023,
+          "f": "7888773023"
+        },
+        {
+          "v": "Kindly send your support process "
+        },
+        {
+          "v": "2025-12-27T04:05:38.265Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Vinod Patil "
+        },
+        {
+          "v": "Rising Biogenetics Pvt Ltd "
+        },
+        {
+          "v": "risingbiogen@gmail.com"
+        },
+        {
+          "v": 8329709383,
+          "f": "8329709383"
+        },
+        {
+          "v": "Interested to know details about your services"
+        },
+        {
+          "v": "2025-12-27T09:49:15.926Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Atul Kumar"
+        },
+        {
+          "v": "Green Orbit Agritech Solution PVT LTD"
+        },
+        {
+          "v": "atulkochas@gmail.com"
+        },
+        {
+          "v": 8340621467,
+          "f": "8340621467"
+        },
+        {
+          "v": "I want to understand your strategy & planning for a business growth.n"
+        },
+        {
+          "v": "2025-12-28T14:07:07.244Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Srinivasan Krishnan "
+        },
+        {
+          "v": "Ranghas Agro Products "
+        },
+        {
+          "v": "ranghasagroproducts@gmail.com"
+        },
+        {
+          "v": 9886042794,
+          "f": "9886042794"
+        },
+        {
+          "v": "Would like to take my Neem based Natural & Traditional fertilizers to wider farmer community. Need suitable support to achieve "
+        },
+        {
+          "v": "2025-12-30T14:45:55.642Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Prem "
+        },
+        {
+          "v": "Himalaya bitech"
+        },
+        {
+          "v": "bhambhuji0001@gmail.com"
+        },
+        {
+          "v": 9509391231,
+          "f": "9509391231"
+        },
+        {
+          "v": "We will plan in Pomegranate crops with our key products so how can you will help "
+        },
+        {
+          "v": "2025-12-30T19:51:08.330Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Aashutosh Patidar"
+        },
+        {
+          "v": "Scarnia Agrinity Private Limited "
+        },
+        {
+          "v": "aashutoshsandla@gmail.com"
+        },
+        {
+          "v": 6260387280,
+          "f": "6260387280"
+        },
+        {
+          "v": "I want to generate more leads through advertising and marketing for my fertiliser company"
+        },
+        {
+          "v": "2026-01-06T19:21:52.825Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Amol Khebale"
+        },
+        {
+          "v": "Amol Khebale"
+        },
+        {
+          "v": "amolkhebale@gmail.com"
+        },
+        {
+          "v": 918888918959,
+          "f": "918888918959"
+        },
+        {
+          "v": "Sir I have a job "
+        },
+        {
+          "v": "2026-01-07T05:59:03.956Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Vid"
+        },
+        {
+          "v": "Terra Crop Science "
+        },
+        {
+          "v": "vidhyaravoor@gmail.com"
+        },
+        null,
+        {
+          "v": "Need to understand more "
+        },
+        {
+          "v": "2026-01-09T14:40:30.417Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Ritendra Nayak "
+        },
+        {
+          "v": "Samriddhi agro industries "
+        },
+        {
+          "v": "samriddhiagro.ind@gmail.com"
+        },
+        {
+          "v": 7067777775,
+          "f": "7067777775"
+        },
+        {
+          "v": "Hi , I want"
+        },
+        {
+          "v": "2026-01-11T19:56:09.053Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Adharsh Kumar Moogala "
+        },
+        {
+          "v": "Sri Srinivasa Food Nutrients "
+        },
+        {
+          "v": "adharshkumarmoogala@gmail.com"
+        },
+        {
+          "v": 917416202326,
+          "f": "917416202326"
+        },
+        {
+          "v": "Need more details "
+        },
+        {
+          "v": "2026-01-14T06:30:57.848Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Tarun Patidar"
+        },
+        {
+          "v": "Farmkart"
+        },
+        {
+          "v": "tarunp@farmkart.com"
+        },
+        {
+          "v": 9754684978,
+          "f": "9754684978"
+        },
+        {
+          "v": "We Are Looking for Marketing Partner"
+        },
+        {
+          "v": "2026-01-16T04:36:36.783Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Dhaval baria "
+        },
+        {
+          "v": "Agriilinc innovations pvt Ltd "
+        },
+        {
+          "v": "dhavalbaria350@gmail.com"
+        },
+        {
+          "v": 8758824789,
+          "f": "8758824789"
+        },
+        {
+          "v": "Agriculture machinery rent, buy and doorstep service app marketing "
+        },
+        {
+          "v": "2026-01-16T16:17:36.133Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Ashish Nigam "
+        },
+        {
+          "v": "KKSA industries pvt Ltd "
+        },
+        {
+          "v": "nigamashish2017@gmail.com"
+        },
+        {
+          "v": 9717986664,
+          "f": "9717986664"
+        },
+        {
+          "v": "Want to discuss "
+        },
+        {
+          "v": "2026-01-19T09:56:41.749Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "shashidhar vakkalar"
+        },
+        {
+          "v": "GAJENDRAGAD FARMER PRODUCER company LIMITED "
+        },
+        {
+          "v": "sudifpo2021@gmail.com"
+        },
+        {
+          "v": 9886543535,
+          "f": "9886543535"
+        },
+        {
+          "v": "We have a FPO"
+        },
+        {
+          "v": "2026-01-19T18:07:05.286Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Nikhil Bansal"
+        },
+        {
+          "v": "Kanura Irrigation Systems Pvt. Ltd."
+        },
+        {
+          "v": "nikhilbansal94@gmail.com"
+        },
+        {
+          "v": 9560922246,
+          "f": "9560922246"
+        },
+        {
+          "v": "Want to know about your products"
+        },
+        {
+          "v": "2026-01-20T05:50:50.481Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Peeyush Sharma "
+        },
+        {
+          "v": "HARVESTVIBES VENTURE LLP"
+        },
+        {
+          "v": "peeyush9873321@gmail.com"
+        },
+        {
+          "v": 6375960761,
+          "f": "6375960761"
+        },
+        {
+          "v": "I am intresting these type activities."
+        },
+        {
+          "v": "2026-01-21T14:07:55.263Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Vaishnavi "
+        },
+        {
+          "v": "AIESEC"
+        },
+        {
+          "v": "vaishnavisengar10a@gmail.com"
+        },
+        {
+          "v": 9129476371,
+          "f": "9129476371"
+        },
+        {
+          "v": "I am Senior Manager of AIESEC in Delhi University. We want to work with you. Please provide us with your email ID."
+        },
+        {
+          "v": "2026-01-27T01:30:35.324Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Prasoon"
+        },
+        {
+          "v": "Orchard enterprises "
+        },
+        {
+          "v": "orchardkullu@gmail.com"
+        },
+        {
+          "v": 9816032222,
+          "f": "9816032222"
+        },
+        {
+          "v": "Awating  for details "
+        },
+        {
+          "v": "2026-01-29T14:17:15.045Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Praveen Tyagi"
+        },
+        {
+          "v": "Bullockart Crop Science "
+        },
+        {
+          "v": "tyagipraveen26483@gmail.com"
+        },
+        {
+          "v": 9816622540,
+          "f": "9816622540"
+        },
+        {
+          "v": "I need social media marketing for our agriculture products "
+        },
+        {
+          "v": "2026-02-07T12:29:12.459Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Jalpesh "
+        },
+        {
+          "v": "Ujahs "
+        },
+        {
+          "v": "bhattjalpesh77@gmail.com"
+        },
+        {
+          "v": 919033041243,
+          "f": "919033041243"
+        },
+        {
+          "v": "Hi\nNeed more details "
+        },
+        {
+          "v": "2026-02-09T17:25:27.545Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Nikhil Bansal"
+        },
+        {
+          "v": "Kanura Irrigation Systems Pvt. Ltd."
+        },
+        {
+          "v": "nikhilbansal94@gmail.com"
+        },
+        {
+          "v": 9560922246,
+          "f": "9560922246"
+        },
+        {
+          "v": "Social media marketing services "
+        },
+        {
+          "v": "2026-02-10T13:04:00.147Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Sibasish Padhi"
+        },
+        {
+          "v": "COLIX AGRO"
+        },
+        {
+          "v": "colixagro@gmail.com"
+        },
+        {
+          "v": 9348524730,
+          "f": "9348524730"
+        },
+        {
+          "v": "I am a founder of colix agro , deals in crop protection chemicals and fertilizers, want to have conversations regarding marketing and all contact me ASAP"
+        },
+        {
+          "v": "2026-02-10T19:04:10.990Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Omprasad "
+        },
+        {
+          "v": "Agrience Pvt Ltd"
+        },
+        {
+          "v": "omprasadn@agrience.in"
+        },
+        {
+          "v": 8185977779,
+          "f": "8185977779"
+        },
+        {
+          "v": "Hello Digicide, We need digital marketing solutions"
+        },
+        {
+          "v": "2026-02-11T06:46:12.294Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "V Surya Narayana "
+        },
+        {
+          "v": "Vsn_properties "
+        },
+        {
+          "v": "vsnproperties.sreeja@gmail.com"
+        },
+        {
+          "v": 8885568688,
+          "f": "8885568688"
+        },
+        {
+          "v": "Interested "
+        },
+        {
+          "v": "2026-02-12T06:19:03.059Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Kartik "
+        },
+        {
+          "v": "Rucha Yantra"
+        },
+        {
+          "v": "kajadhav@yantrauav.com"
+        },
+        {
+          "v": 9518520507,
+          "f": "9518520507"
+        },
+        {
+          "v": "Need quatation"
+        },
+        {
+          "v": "2026-02-13T10:04:50.357Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Venkatesh "
+        },
+        {
+          "v": "Lepakshi"
+        },
+        {
+          "v": "venkateshgouddanturi@gmail.com"
+        },
+        {
+          "v": 9915719698,
+          "f": "9915719698"
+        },
+        {
+          "v": "Telangana will do freelancer "
+        },
+        {
+          "v": "2026-02-15T09:15:52.688Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Ankush Kumar"
+        },
+        {
+          "v": "Digicides"
+        },
+        {
+          "v": "ankush.kumar@digicides.com"
+        },
+        {
+          "v": 6395687260,
+          "f": "6395687260"
+        },
+        {
+          "v": "Hello Hie How Are You"
+        },
+        {
+          "v": "2026-02-17T11:42:26.000Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Mayank Patidar"
+        },
+        {
+          "v": "Krishi bazar "
+        },
+        {
+          "v": "mayankpatel030@gmail.com"
+        },
+        {
+          "v": 83495456166,
+          "f": "83495456166"
+        },
+        {
+          "v": "Interested "
+        },
+        {
+          "v": "2026-02-18T09:48:16.239Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "GILBERT KIPKIRUI"
+        },
+        {
+          "v": "TAHIDI COMPANY"
+        },
+        {
+          "v": "rop6825@gmail.com"
+        },
+        {
+          "v": 708360197,
+          "f": "708360197"
+        },
+        {
+          "v": "Hire me to do different research concerning different field of agriculture Please i'm looking forward to work with you with full energy to better farmers outcomes."
+        },
+        {
+          "v": "2026-02-18T10:27:17.110Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "VijayRaju"
+        },
+        {
+          "v": "VAJRAX"
+        },
+        {
+          "v": "vajraax@gmail.com"
+        },
+        {
+          "v": 9642933399,
+          "f": "9642933399"
+        },
+        {
+          "v": "Exploring digicides "
+        },
+        {
+          "v": "2026-02-20T07:18:26.818Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Omprasad "
+        },
+        {
+          "v": "Agrience pvt ltd"
+        },
+        {
+          "v": "omprasadn@agrience.in"
+        },
+        {
+          "v": 8185977779,
+          "f": "8185977779"
+        },
+        {
+          "v": "Need digital marketing  services"
+        },
+        {
+          "v": "2026-02-21T04:33:16.973Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Sudhir Choudhury"
+        },
+        {
+          "v": "Sudhir Choudhury"
+        },
+        {
+          "v": "sudhirchoudhury300@gmail.com"
+        },
+        {
+          "v": 916267440383,
+          "f": "916267440383"
+        },
+        {
+          "v": "Regarding sunflower oil production"
+        },
+        {
+          "v": "2026-02-21T23:54:34.391Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Pradeep"
+        },
+        {
+          "v": "TrustSignal"
+        },
+        {
+          "v": "pradeep@trustsignal.io"
+        },
+        {
+          "v": 9910316560,
+          "f": "9910316560"
+        },
+        {
+          "v": "I would like to connect"
+        },
+        {
+          "v": "2026-02-23T10:54:56.507Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Narendranath Reddy Y "
+        },
+        {
+          "v": "Daksha agros"
+        },
+        {
+          "v": "narendra70007@gmail.com"
+        },
+        {
+          "v": 9398280277,
+          "f": "9398280277"
+        },
+        {
+          "v": "Digital marketing "
+        },
+        {
+          "v": "2026-02-25T00:40:36.491Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Sachin"
+        },
+        {
+          "v": "Arjun Oil Mill"
+        },
+        {
+          "v": "arjunoilmill@gmail.com"
+        },
+        {
+          "v": 9034449844,
+          "f": "9034449844"
+        },
+        {
+          "v": "looking for growth possibilities, kindly connect to discuss  "
+        },
+        {
+          "v": "2026-03-03T07:31:59.736Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Manuvenkat"
+        },
+        {
+          "v": "SHRUTHI HYBRID SEEDS"
+        },
+        {
+          "v": "manu.venkatgadhe15@gmail.com"
+        },
+        {
+          "v": 9908782957,
+          "f": "9908782957"
+        },
+        {
+          "v": "I need to connect with farmers ,get leads ,marketing my products"
+        },
+        {
+          "v": "2026-03-07T08:16:58.214Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "KiranKumar "
+        },
+        {
+          "v": "Kshema General Insurance co ltd"
+        },
+        {
+          "v": "kirank3173@gmail.com"
+        },
+        {
+          "v": 918747948582,
+          "f": "918747948582"
+        },
+        {
+          "v": "Interested "
+        },
+        {
+          "v": "2026-03-09T07:34:32.729Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Kanchana kushwaha Kanchana kushwaha"
+        },
+        {
+          "v": "Kushvaha Kisi Seva Kendra"
+        },
+        {
+          "v": "kanchanakushwahak8@gmail.com"
+        },
+        {
+          "v": 9565223677,
+          "f": "9565223677"
+        },
+        {
+          "v": "Main sabhi Brandon ka retail mein product Lena chahta hun"
+        },
+        {
+          "v": "2026-03-10T16:35:00.189Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Kamal"
+        },
+        {
+          "v": "Indras crop"
+        },
+        {
+          "v": "kamalpugalia67830@gmail.com"
+        },
+        {
+          "v": 8308403112,
+          "f": "8308403112"
+        },
+        {
+          "v": "Agri marking of cattal fied"
+        },
+        {
+          "v": "2026-03-12T05:00:26.439Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "PRIVI LIFE SCIENCES"
+        },
+        {
+          "v": "PRIVI LIFE SCIENCES"
+        },
+        {
+          "v": "rutuja.karegaonkar@privilife.co.in"
+        },
+        {
+          "v": 7718878532,
+          "f": "7718878532"
+        },
+        {
+          "v": "Hi Privi is agrochemical manufacturing company looking for lead generation services. Lets discuss if you can be our partner"
+        },
+        {
+          "v": "2026-03-12T06:55:18.328Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Vinod Narwar"
+        },
+        {
+          "v": "Policy Lab"
+        },
+        {
+          "v": "vinod.narbar@gmail.com"
+        },
+        {
+          "v": 919667688100,
+          "f": "919667688100"
+        },
+        {
+          "v": "We are authorised and empaneled agency for 2 fertiliser producer in india, kindly scheduled a demo of your farmer engagement program."
+        },
+        {
+          "v": "2026-03-14T02:24:11.135Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Prabhu Raj"
+        },
+        {
+          "v": "Coirgarden "
+        },
+        {
+          "v": "info@coirgarden.com"
+        },
+        {
+          "v": 919500999405,
+          "f": "919500999405"
+        },
+        {
+          "v": "I am interested "
+        },
+        {
+          "v": "2026-03-14T15:56:16.511Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Kavitha"
+        },
+        {
+          "v": "Green life pheromone systems "
+        },
+        {
+          "v": "pheromonesystems@gmail.com"
+        },
+        {
+          "v": 9705899222,
+          "f": "9705899222"
+        },
+        {
+          "v": "Let share more details. Need a demo."
+        },
+        {
+          "v": "2026-03-15T00:35:17.518Z"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "Kavitha"
+        },
+        {
+          "v": "Green life pheromone systems "
+        },
+        {
+          "v": "pheromonesystems@gmail.com"
+        },
+        {
+          "v": 9705899222,
+          "f": "9705899222"
+        },
+        {
+          "v": "Let share more details. Need a demo."
+        },
+        {
+          "v": "2026-03-15T00:36:07.565Z"
+        }
+      ]
+    }
+  ]
+}

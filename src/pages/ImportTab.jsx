@@ -18,6 +18,9 @@ const DB_FIELDS = [
   { key: 'status', label: 'Status', required: false },
   { key: 'priority', label: 'Priority', required: false },
   { key: 'assigned_to', label: 'Assigned To', required: false },
+  { key: 'business_type', label: 'Business Type', required: false },
+  { key: 'looking_for', label: 'Looking For', required: false },
+  { key: 'website', label: 'Website', required: false },
   { key: 'follow_up_at', label: 'Follow-up Date', required: false },
   { key: '__skip__', label: '— Skip this column —', required: false },
 ]
@@ -33,6 +36,9 @@ const ALIASES = {
   status: ['status', 'lead status', 'stage', 'deal stage'],
   priority: ['priority', 'lead priority', 'urgency', 'importance'],
   assigned_to: ['assigned to', 'assigned', 'owner', 'sales rep', 'agent', 'salesperson', 'representative', 'team member', 'handled by'],
+  business_type: ['business type', 'business_type', 'which best describes your business', 'which best describes your business?', 'type of business'],
+  looking_for: ['looking for', 'what are you looking for', 'what are you looking for?', 'looking_for', 'looking'],
+  website: ['website', 'site', 'url', 'web'],
   follow_up_at: ['follow up', 'follow-up', 'follow up date', 'followup', 'follow_up_at', 'next follow up', 'callback', 'callback date', 'next call'],
 }
 
@@ -313,6 +319,9 @@ export default function ImportTab({ leads = [], setLeads, dbReady = false, darkM
                     { col: 'Email', req: false, val: 'email@domain.com' },
                     { col: 'Phone', req: false, val: '+91 XXXXX XXXXX' },
                     { col: 'Job Title', req: false, val: 'Any text' },
+                    { col: 'Business Type', req: false, val: 'Any text' },
+                    { col: 'Looking For', req: false, val: 'Any text' },
+                    { col: 'Website', req: false, val: 'Any URL' },
                     { col: 'Message / Notes', req: false, val: 'Any text' },
                     { col: 'Status', req: false, val: 'New · Contacted · Interested · Follow Up · Converted · Not Interested' },
                     { col: 'Priority', req: false, val: 'High · Medium · Low' },

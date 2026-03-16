@@ -11,10 +11,14 @@ CREATE TABLE IF NOT EXISTS leads (
   company       TEXT,
   email         TEXT,
   phone         TEXT,
-  source        TEXT CHECK (source IN ('Website', 'Meta', 'Landing Page 2')),
+  source        TEXT CHECK (source IN ('Website', 'Meta', 'Landing Page 2', 'New Meta Leads March')),
   message       TEXT,
   date          TIMESTAMPTZ,
   job_title     TEXT,
+  business_type TEXT,
+  looking_for   TEXT,
+  website       TEXT,
+
 
   -- Filled by your team (blank by default)
   status        TEXT,
@@ -30,8 +34,11 @@ CREATE TABLE IF NOT EXISTS leads (
 
 -- Migration for existing DBs:
 ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_source_check;
-ALTER TABLE leads ADD CONSTRAINT leads_source_check CHECK (source IN ('Website', 'Meta', 'Landing Page 2'));
+ALTER TABLE leads ADD CONSTRAINT leads_source_check CHECK (source IN ('Website', 'Meta', 'Landing Page 2', 'New Meta Leads March'));
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS follow_up_at TIMESTAMPTZ;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS business_type TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS looking_for TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS website TEXT;
 
 -- 2. AUTO-UPDATE updated_at ON EVERY EDIT
 -- -------------------------------------------------------------
