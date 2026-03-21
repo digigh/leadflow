@@ -30,14 +30,21 @@ const parseSheetData = (sheetResult, sourceName, headerKeywords) => {
     let colMap = {};
 
     const colLabels = cols.map(c => (c.label || '').toLowerCase());
+    let hasValidColLabels = false;
     if (headerKeywords.some(kw => colLabels.includes(kw))) {
         colLabels.forEach((val, idx) => {
             if (val) colMap[val] = idx;
         });
-    } else {
+        hasValidColLabels = true;
+    }
+
+    if (!hasValidColLabels) {
         for (let i = 0; i < rows.length; i++) {
             const rowVals = rows[i].c?.map(cell => (cell ? (cell.v || '').toString().toLowerCase() : '')) || [];
-            if (headerKeywords.some(kw => rowVals.includes(kw))) {
+            
+            const hasDataInRow = rowVals.some(v => v.includes('@') || v.includes('p:+') || /^\d{10}$/.test(v));
+            
+            if (headerKeywords.some(kw => rowVals.includes(kw)) && !hasDataInRow) {
                 headerRowIndex = i;
                 rowVals.forEach((val, idx) => {
                     if (val) colMap[val] = idx;
@@ -48,6 +55,41 @@ const parseSheetData = (sheetResult, sourceName, headerKeywords) => {
     }
 
     const parsedLeads = [];
+    if (Object.keys(colMap).length === 0 && sourceName === 'New Meta Leads March') {
+        rows.forEach((row) => {
+            const c = row.c || [];
+            const safeVal = (idx) => (c[idx] && c[idx].v) ? c[idx].v.toString() : '';
+            let name = safeVal(14);
+            let phone = safeVal(15);
+            if (phone.startsWith('p:')) phone = phone.substring(2);
+            phone = phone.replace(/\D/g, '');
+            let email = safeVal(16);
+            let company = safeVal(17);
+            let job_title = safeVal(18);
+            let website = safeVal(19);
+            let business_type = safeVal(12);
+            let looking_for = safeVal(13);
+            let dateStr = safeVal(1);
+            
+            if (name || email || phone) {
+                parsedLeads.push({
+                    lead_name: name,
+                    company: company,
+                    email: email,
+                    phone: phone,
+                    job_title: job_title,
+                    message: '',
+                    business_type: business_type,
+                    looking_for: looking_for,
+                    website: website,
+                    date: dateStr || new Date().toISOString(),
+                    source: sourceName,
+                });
+            }
+        });
+        return parsedLeads;
+    }
+
     if (Object.keys(colMap).length > 0) {
         const dataRows = headerRowIndex !== -1 ? rows.slice(headerRowIndex + 1) : rows;
         dataRows.forEach(row => {
@@ -127,26 +169,33 @@ const parseSheetData = (sheetResult, sourceName, headerKeywords) => {
 async function test() {
     const results = {};
 
-    console.log("Fetching Landing Page 2...");
-    const landingPage2Result = await fetchSheet('Landing Page 2');
-    if (landingPage2Result.rows && landingPage2Result.rows.length > 0) {
-        const landingPageLeads = parseSheetData(landingPage2Result, 'Landing Page 2', ['first name', 'last name', 'email', 'phone number', 'company', 'job title', 'message', 'date and time']);
-        results['Landing Page 2'] = landingPageLeads;
+    const sheetsToTest = ['Sheet1', 'Meta Lead Subsheet', 'Landing Page 2', 'New Meta Leads March'];
+    const parsedResults = {};
+    for (const sheet of sheetsToTest) {
+        console.log(`Fetching ${sheet}...`);
+        const result = await fetchSheet(sheet);
+        if (result.rows && result.rows.length > 0) {
+            results[sheet] = {
+                cols: result.cols,
+                row0: result.rows[0]?.c,
+                row1: result.rows[1]?.c
+            };
+            
+            let parsed = [];
+            if (sheet === 'Landing Page 2') {
+                parsed = parseSheetData({ rows: result.rows, cols: result.cols }, sheet, ['first name', 'last name', 'email', 'phone number', 'company', 'job title']);
+            } else if (sheet === 'New Meta Leads March') {
+                parsed = parseSheetData({ rows: result.rows, cols: result.cols }, sheet, ['full_name', 'name', 'email', 'phone']);
+            } else {
+                parsed = parseSheetData({ rows: result.rows, cols: result.cols }, sheet, ['name', 'email', 'phone number', 'full_name', 'phone']);
+            }
+            parsedResults[sheet] = parsed;
+        }
     }
+    fs.writeFileSync('debug-all-sheets.json', JSON.stringify(results, null, 2));
+    console.log("Wrote debug-all-sheets.json");
 
-    console.log("Fetching New Meta Leads March...");
-    const newMetaResult = await fetchSheet('New Meta Leads March');
-    if (newMetaResult.rows && newMetaResult.rows.length > 0) {
-        const newMetaLeads = parseSheetData(newMetaResult, 'New Meta Leads March', ['full_name', 'name', 'email', 'phone']);
-        const fetchTime = new Date().toISOString();
-        const timestampedNewMetaLeads = newMetaLeads.map(lead => ({
-            ...lead,
-            date: fetchTime
-        }));
-        results['New Meta Leads March'] = timestampedNewMetaLeads;
-    }
-
-    fs.writeFileSync('test-new-sheets-result.json', JSON.stringify(results, null, 2));
+    fs.writeFileSync('test-new-sheets-result.json', JSON.stringify(parsedResults, null, 2));
     console.log("Wrote results to test-new-sheets-result.json");
 }
 

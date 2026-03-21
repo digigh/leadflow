@@ -27,14 +27,21 @@ const parseSheetData = (sheetResult, sourceName, headerKeywords) => {
     let colMap = {};
 
     const colLabels = cols.map(c => (c.label || '').toLowerCase());
+    let hasValidColLabels = false;
     if (headerKeywords.some(kw => colLabels.includes(kw))) {
         colLabels.forEach((val, idx) => {
             if (val) colMap[val] = idx;
         });
-    } else {
+        hasValidColLabels = true;
+    }
+
+    if (!hasValidColLabels) {
         for (let i = 0; i < rows.length; i++) {
             const rowVals = rows[i].c?.map(cell => (cell ? (cell.v || '').toString().toLowerCase() : '')) || [];
-            if (headerKeywords.some(kw => rowVals.includes(kw))) {
+            
+            const hasDataInRow = rowVals.some(v => v.includes('@') || v.includes('p:+') || /^\d{10}$/.test(v));
+            
+            if (headerKeywords.some(kw => rowVals.includes(kw)) && !hasDataInRow) {
                 headerRowIndex = i;
                 rowVals.forEach((val, idx) => {
                     if (val) colMap[val] = idx;
@@ -45,6 +52,41 @@ const parseSheetData = (sheetResult, sourceName, headerKeywords) => {
     }
 
     const parsedLeads = [];
+    if (Object.keys(colMap).length === 0 && sourceName === 'New Meta Leads March') {
+        rows.forEach((row) => {
+            const c = row.c || [];
+            const safeVal = (idx) => (c[idx] && c[idx].v) ? c[idx].v.toString() : '';
+            let name = safeVal(14);
+            let phone = safeVal(15);
+            if (phone.startsWith('p:')) phone = phone.substring(2);
+            phone = phone.replace(/\D/g, '');
+            let email = safeVal(16);
+            let company = safeVal(17);
+            let job_title = safeVal(18);
+            let website = safeVal(19);
+            let business_type = safeVal(12);
+            let looking_for = safeVal(13);
+            let dateStr = safeVal(1);
+            
+            if (name || email || phone) {
+                parsedLeads.push({
+                    lead_name: name,
+                    company: company,
+                    email: email,
+                    phone: phone,
+                    job_title: job_title,
+                    message: '',
+                    business_type: business_type,
+                    looking_for: looking_for,
+                    website: website,
+                    date: dateStr || new Date().toISOString(),
+                    source: sourceName,
+                });
+            }
+        });
+        return parsedLeads;
+    }
+
     if (Object.keys(colMap).length > 0) {
         const dataRows = headerRowIndex !== -1 ? rows.slice(headerRowIndex + 1) : rows;
         dataRows.forEach((row, index) => {
@@ -122,39 +164,94 @@ async function testSupabaseInsert() {
     try {
         const websiteResult = await fetchSheet('Sheet1');
         const websiteLeads = parseSheetData(websiteResult, 'Website', ['name', 'email', 'phone number']);
+        console.log("Website leads fetched: ", websiteLeads.length);
         allLeads.push(...websiteLeads);
-    } catch (e) { }
+    } catch (e) { console.error('Website Error', e); }
 
     // Meta Leads
     try {
-        const metaResult = await fetchSheet('Meta Lead');
+        const metaResult = await fetchSheet('Meta Lead Subsheet');
         if (metaResult.rows && metaResult.rows.length > 0) {
             const metaLeads = parseSheetData(metaResult, 'Meta', ['full_name', 'name', 'email', 'phone', 'first_name', 'phone number']);
+            console.log("Meta Lead Subsheet fetched: ", metaLeads.length);
             const fetchTime = new Date().toISOString();
             const timestampedMetaLeads = metaLeads.map(lead => ({ ...lead, date: fetchTime }));
             allLeads.push(...timestampedMetaLeads);
         }
-    } catch (e) { }
+    } catch (e) { console.error('Meta Lead Subsheet Error', e); }
 
-    const { data: existing } = await supabase.from('leads').select('email, phone, lead_name');
+    // Landing Page 2
+    try {
+        const landingPage2Result = await fetchSheet('Landing Page 2');
+        if (landingPage2Result.rows && landingPage2Result.rows.length > 0) {
+            const landingPageLeads = parseSheetData(landingPage2Result, 'Landing Page 2', ['first name', 'last name', 'email', 'phone number', 'company', 'job title', 'message', 'date and time']);
+            console.log("Landing Page 2 fetched: ", landingPageLeads.length);
+            allLeads.push(...landingPageLeads);
+        }
+    } catch (e) { console.error('Landing Page 2 Error', e); }
 
-    const newLeads = allLeads.filter(l => {
+    // New Meta Leads March
+    try {
+        const newMetaResult = await fetchSheet('New Meta Leads March');
+        if (newMetaResult.rows && newMetaResult.rows.length > 0) {
+            const newMetaLeads = parseSheetData(newMetaResult, 'New Meta Leads March', ['full_name', 'name', 'email', 'phone']);
+            console.log("New Meta Leads March fetched: ", newMetaLeads.length);
+            const fetchTime = new Date().toISOString();
+            const timestampedNewMetaLeads = newMetaLeads.map(lead => ({
+                ...lead,
+                date: fetchTime
+            }));
+            allLeads.push(...timestampedNewMetaLeads);
+        }
+    } catch (e) { console.error('New Meta Leads March Error', e); }
+
+    const { data: existing } = await supabase.from('leads').select('id, email, phone, lead_name');
+
+    const insertLeads = [];
+    const updatePromises = [];
+
+    const uniqueAllLeadsMap = new Map();
+    for (const lead of allLeads) {
+        const key = lead.email ? lead.email.toLowerCase() : lead.phone;
+        uniqueAllLeadsMap.set(key, lead);
+    }
+    const uniqueAllLeads = Array.from(uniqueAllLeadsMap.values());
+
+    for (const l of uniqueAllLeads) {
         const cleanPhone = String(l.phone || '').replace(/\D/g, '');
-        return !existing?.some(e => {
+        
+        const existingMatch = existing?.find(e => {
             const eCleanPhone = String(e.phone || '').replace(/\D/g, '');
             return (
-                (l.email && e.email && e.email === l.email) ||
+                (l.email && e.email && e.email.toLowerCase() === l.email.toLowerCase()) ||
                 (cleanPhone && eCleanPhone && eCleanPhone === cleanPhone && e.lead_name === l.lead_name)
             );
         });
-    });
 
-    console.log(`Going to insert ${newLeads.length} NEW unique leads...`);
+        if (existingMatch) {
+            const updatePayload = {};
+            if (l.date) updatePayload.date = l.date;
+            if (l.source) updatePayload.source = l.source;
+            if (l.message) updatePayload.message = l.message;
+            if (l.business_type) updatePayload.business_type = l.business_type;
+            if (l.looking_for) updatePayload.looking_for = l.looking_for;
+            if (l.website) updatePayload.website = l.website;
+            if (l.job_title) updatePayload.job_title = l.job_title;
+            if (l.company) updatePayload.company = l.company;
+            
+            if (Object.keys(updatePayload).length > 0) {
+                updatePromises.push(
+                    supabase.from('leads').update(updatePayload).eq('id', existingMatch.id)
+                );
+            }
+        } else {
+            insertLeads.push(l);
+        }
+    }
 
-    if (newLeads.length > 0) {
-        // print out one to test constraints
-        console.log("Sample Insert Object:", newLeads[0]);
-        const { error, data } = await supabase.from('leads').insert(newLeads).select();
+    if (insertLeads.length > 0) {
+        console.log("BACKEND SYNC: Inserting these new leads:", insertLeads.length);
+        const { error, data } = await supabase.from('leads').insert(insertLeads).select();
         if (error) {
             console.error("SUPABASE ERROR:", error);
         } else {
@@ -162,6 +259,19 @@ async function testSupabaseInsert() {
         }
     } else {
         console.log("No new leads to insert.");
+    }
+
+    if (updatePromises.length > 0) {
+        console.log(`BACKEND SYNC: Updating ${updatePromises.length} existing leads with fresh payloads.`);
+        const updateResults = await Promise.all(updatePromises);
+        const errors = updateResults.filter(r => r.error);
+        if (errors.length > 0) {
+            console.error("SUPABASE UPDATE ERROR:", errors[0].error);
+        } else {
+            console.log("Successfully updated all returning leads!");
+        }
+    } else {
+        console.log("No existing leads to update.");
     }
 }
 

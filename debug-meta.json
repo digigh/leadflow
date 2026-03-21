@@ -1,0 +1,982 @@
+{
+  "cols": [
+    {
+      "id": "A",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "B",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "C",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "D",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "E",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "F",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "G",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "H",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "I",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "J",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "K",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "L",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "M",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "N",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "O",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "P",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "Q",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "R",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "S",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "T",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "U",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "V",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "W",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "X",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "Y",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "Z",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AA",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AB",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AC",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AD",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AE",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AF",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AG",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AH",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AI",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AJ",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AK",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AL",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AM",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AN",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AO",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AP",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AQ",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AR",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AS",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AT",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AU",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AV",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AW",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AX",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AY",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "AZ",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "BA",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "BB",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "BC",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "BD",
+      "label": "",
+      "type": "string"
+    },
+    {
+      "id": "BE",
+      "label": "",
+      "type": "string"
+    }
+  ],
+  "rows": [
+    {
+      "c": [
+        {
+          "v": "l:1423272972869310"
+        },
+        {
+          "v": "2026-03-19T23:34:29-05:00"
+        },
+        {
+          "v": "ag:120234807222360097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "as:120234807222370097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "c:120230296203170097"
+        },
+        {
+          "v": "Loyalty Program"
+        },
+        {
+          "v": "f:2154223995400162"
+        },
+        {
+          "v": "Mar'26-copy"
+        },
+        {
+          "v": "false"
+        },
+        {
+          "v": "fb"
+        },
+        {
+          "v": "agri_input_brand"
+        },
+        {
+          "v": "farmer_lead_generation"
+        },
+        {
+          "v": "Balaji Singh"
+        },
+        {
+          "v": "p:+919686575855"
+        },
+        {
+          "v": "baluagri@gmail.com"
+        },
+        {
+          "v": "SVFS pvt ltd"
+        },
+        {
+          "v": "Bussines"
+        },
+        {
+          "v": "Www.svafs.com"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "v": "CREATED"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "v": null
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "l:935964928929937"
+        },
+        {
+          "v": "2026-03-19T17:24:03-05:00"
+        },
+        {
+          "v": "ag:120234807222360097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "as:120234807222370097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "c:120230296203170097"
+        },
+        {
+          "v": "Loyalty Program"
+        },
+        {
+          "v": "f:2154223995400162"
+        },
+        {
+          "v": "Mar'26-copy"
+        },
+        {
+          "v": "false"
+        },
+        {
+          "v": "fb"
+        },
+        {
+          "v": "seed_company"
+        },
+        {
+          "v": "farmer_lead_generation"
+        },
+        {
+          "v": "Jamal Uddin Ahmed"
+        },
+        {
+          "v": "p:+916002881431"
+        },
+        {
+          "v": "qualifyindia1@gmail.com"
+        },
+        {
+          "v": "Marketing development officer At Tassel Seeds private limited"
+        },
+        {
+          "v": "Sales officer"
+        },
+        {
+          "v": "https://sriramaseeds.com/"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "v": "CREATED"
+        },
+        {
+          "v": "id"
+        },
+        {
+          "v": "created_time"
+        },
+        {
+          "v": "ad_id"
+        },
+        {
+          "v": "ad_name"
+        },
+        {
+          "v": "adset_id"
+        },
+        {
+          "v": "adset_name"
+        },
+        {
+          "v": "campaign_id"
+        },
+        {
+          "v": "campaign_name"
+        },
+        {
+          "v": "form_id"
+        },
+        {
+          "v": "form_name"
+        },
+        {
+          "v": "is_organic"
+        },
+        {
+          "v": "platform"
+        },
+        {
+          "v": "which_best_describes_your_business?"
+        },
+        {
+          "v": "what_are_you_looking_for?"
+        },
+        {
+          "v": "full_name"
+        },
+        {
+          "v": "phone"
+        },
+        {
+          "v": "email"
+        },
+        {
+          "v": "company_name"
+        },
+        {
+          "v": "job_title"
+        },
+        {
+          "v": "website"
+        },
+        {
+          "v": "lead_status"
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "l:1605318607410039"
+        },
+        {
+          "v": "2026-03-19T11:29:13-05:00"
+        },
+        {
+          "v": "ag:120234807222360097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "as:120234807222370097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "c:120230296203170097"
+        },
+        {
+          "v": "Loyalty Program"
+        },
+        {
+          "v": "f:2154223995400162"
+        },
+        {
+          "v": "Mar'26-copy"
+        },
+        {
+          "v": "false"
+        },
+        {
+          "v": "fb"
+        },
+        {
+          "v": "fertilizer_company"
+        },
+        {
+          "v": "boost_product_sales"
+        },
+        {
+          "v": "PRASAD BABU KV"
+        },
+        {
+          "v": "p:+918115656789"
+        },
+        {
+          "v": "rohiniaqua@gmail.com"
+        },
+        {
+          "v": "Rohini Aqua"
+        },
+        {
+          "v": "Director Technical"
+        },
+        {
+          "v": "http://rohiniaqua.com/"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "v": "CREATED"
+        },
+        {
+          "v": "id"
+        },
+        {
+          "v": "created_time"
+        },
+        {
+          "v": "ad_id"
+        },
+        {
+          "v": "ad_name"
+        },
+        {
+          "v": "adset_id"
+        },
+        {
+          "v": "adset_name"
+        },
+        {
+          "v": "campaign_id"
+        },
+        {
+          "v": "campaign_name"
+        },
+        {
+          "v": "form_id"
+        },
+        {
+          "v": "form_name"
+        },
+        {
+          "v": "is_organic"
+        },
+        {
+          "v": "platform"
+        },
+        {
+          "v": "which_best_describes_your_business?"
+        },
+        {
+          "v": "what_are_you_looking_for?"
+        },
+        {
+          "v": "full_name"
+        },
+        {
+          "v": "phone"
+        },
+        {
+          "v": "email"
+        },
+        {
+          "v": "company_name"
+        },
+        {
+          "v": "job_title"
+        },
+        {
+          "v": "website"
+        },
+        {
+          "v": "lead_status"
+        },
+        {
+          "v": null
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "l:1958680601399180"
+        },
+        {
+          "v": "2026-03-19T09:54:43-05:00"
+        },
+        {
+          "v": "ag:120234807222360097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "as:120234807222370097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "c:120230296203170097"
+        },
+        {
+          "v": "Loyalty Program"
+        },
+        {
+          "v": "f:2154223995400162"
+        },
+        {
+          "v": "Mar'26-copy"
+        },
+        {
+          "v": "false"
+        },
+        {
+          "v": "fb"
+        },
+        {
+          "v": "seed_company"
+        },
+        {
+          "v": "farmer_lead_generation"
+        },
+        {
+          "v": "naimish busa"
+        },
+        {
+          "v": "p:+919601909296"
+        },
+        {
+          "v": "busanaimish501@gmail.com"
+        },
+        {
+          "v": "saurashtra crop science pvt Ltd"
+        },
+        {
+          "v": "managing director"
+        },
+        {
+          "v": "saurashtracropscience.com"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "v": "CREATED"
+        },
+        {
+          "v": "id"
+        },
+        {
+          "v": "created_time"
+        },
+        {
+          "v": "ad_id"
+        },
+        {
+          "v": "ad_name"
+        },
+        {
+          "v": "adset_id"
+        },
+        {
+          "v": "adset_name"
+        },
+        {
+          "v": "campaign_id"
+        },
+        {
+          "v": "campaign_name"
+        },
+        {
+          "v": "form_id"
+        },
+        {
+          "v": "form_name"
+        },
+        {
+          "v": "is_organic"
+        },
+        {
+          "v": "platform"
+        },
+        {
+          "v": "which_best_describes_your_business?"
+        },
+        {
+          "v": "what_are_you_looking_for?"
+        },
+        {
+          "v": "full_name"
+        },
+        {
+          "v": "phone"
+        },
+        {
+          "v": "email"
+        },
+        {
+          "v": "company_name"
+        },
+        {
+          "v": "job_title"
+        },
+        {
+          "v": "website"
+        },
+        {
+          "v": "lead_status"
+        },
+        null,
+        {
+          "v": null
+        }
+      ]
+    },
+    {
+      "c": [
+        {
+          "v": "l:733499116395326"
+        },
+        {
+          "v": "2026-03-19T08:55:31-05:00"
+        },
+        {
+          "v": "ag:120234807222360097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "as:120234807222370097"
+        },
+        {
+          "v": "Agri Client leads 2.0"
+        },
+        {
+          "v": "c:120230296203170097"
+        },
+        {
+          "v": "Loyalty Program"
+        },
+        {
+          "v": "f:2154223995400162"
+        },
+        {
+          "v": "Mar'26-copy"
+        },
+        {
+          "v": "false"
+        },
+        {
+          "v": "fb"
+        },
+        {
+          "v": "agri_input_brand"
+        },
+        {
+          "v": "farmer_engagement"
+        },
+        {
+          "v": "San"
+        },
+        {
+          "v": "p:+919090153999"
+        },
+        {
+          "v": "abeillesanjay@gmail.com"
+        },
+        {
+          "v": "Abeille world"
+        },
+        {
+          "v": "Sanjay"
+        },
+        {
+          "v": "Abeille.com"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "v": "CREATED"
+        },
+        {
+          "v": "id"
+        },
+        {
+          "v": "created_time"
+        },
+        {
+          "v": "ad_id"
+        },
+        {
+          "v": "ad_name"
+        },
+        {
+          "v": "adset_id"
+        },
+        {
+          "v": "adset_name"
+        },
+        {
+          "v": "campaign_id"
+        },
+        {
+          "v": "campaign_name"
+        },
+        {
+          "v": "form_id"
+        },
+        {
+          "v": "form_name"
+        },
+        {
+          "v": "is_organic"
+        },
+        {
+          "v": "platform"
+        },
+        {
+          "v": "which_best_describes_your_business?"
+        },
+        {
+          "v": "what_are_you_looking_for?"
+        },
+        {
+          "v": "full_name"
+        },
+        {
+          "v": "phone"
+        },
+        {
+          "v": "email"
+        },
+        {
+          "v": "company_name"
+        },
+        {
+          "v": "job_title"
+        },
+        {
+          "v": "website"
+        },
+        {
+          "v": "lead_status"
+        },
+        null,
+        null,
+        {
+          "v": null
+        }
+      ]
+    }
+  ]
+}
