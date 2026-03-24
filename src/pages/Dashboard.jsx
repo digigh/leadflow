@@ -3,7 +3,7 @@ import { Target, Users, BarChart2, LogOut, Menu, Moon, Sun, Bell, X, RefreshCw, 
 import { supabase } from '../lib/supabase'
 import { MOCK_LEADS } from '../lib/constants'
 import { syncGoogleSheets } from '../lib/sheets'
-import { loadSettings, saveSettings } from '../lib/settings'
+import { loadSettings, saveSettings, DEFAULT_SETTINGS } from '../lib/settings'
 import LeadsTab from './LeadsTab'
 import AnalyticsTab from './AnalyticsTab'
 import SettingsTab from './SettingsTab'
@@ -17,11 +17,16 @@ export default function Dashboard({ onLogout }) {
   const [activeTab, setActiveTab] = useState('leads')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('lf-dark') === 'true')
-  const [settings, setSettings] = useState(() => loadSettings())
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
 
-  const handleSettingsChange = (newSettings) => {
+  useEffect(() => {
+    loadSettings().then(setSettings)
+  }, [])
+
+  const handleSettingsChange = async (newSettings) => {
+    // Optimistic UI update
     setSettings(newSettings)
-    saveSettings(newSettings)
+    await saveSettings(newSettings)
   }
 
   const [leads, setLeads] = useState([])
@@ -109,8 +114,28 @@ export default function Dashboard({ onLogout }) {
     if (!opts.silent) setLoading(false)
   }, [])
 
-  // Initial load
-  useEffect(() => { loadLeads() }, [loadLeads])
+  // Initial load with Auto-Sync
+  useEffect(() => {
+    let mounted = true
+    async function init() {
+      if (!mounted) return
+      setLoading(true)
+      setPolling(true)
+      try {
+        await syncGoogleSheets()
+      } catch (err) {
+        console.error('Initial auto-sync failed:', err)
+      }
+      if (mounted) setPolling(false)
+      
+      if (mounted) {
+        await loadLeads({ silent: true })
+        setLoading(false)
+      }
+    }
+    init()
+    return () => { mounted = false }
+  }, [loadLeads])
 
   // ── Auto-poll every 5 minutes ──────────────────────────────────────────────
   useEffect(() => {

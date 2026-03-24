@@ -1,5 +1,5 @@
 /**
- * LeadFlow Settings — persisted in localStorage
+ * LeadFlow Settings — persisted in Supabase
  *
  * Shape:
  * {
@@ -16,8 +16,7 @@ import {
     PRIORITY_OPTIONS,
     ASSIGNED_OPTIONS,
 } from './constants'
-
-const LS_KEY = 'lf_settings'
+import { supabase } from './supabase'
 
 export const DEFAULT_COLUMNS = [
     { key: 'lead_name', label: 'Lead', removable: false },
@@ -35,7 +34,7 @@ export const DEFAULT_COLUMNS = [
     { key: 'actions', label: 'Actions', removable: false },
 ]
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = {
     statusOptions: [...STATUS_OPTIONS],
     priorityOptions: [...PRIORITY_OPTIONS],
     assignedOptions: [...ASSIGNED_OPTIONS],
@@ -43,27 +42,54 @@ const DEFAULT_SETTINGS = {
     customColumns: [],
 }
 
-export function loadSettings() {
+export async function loadSettings() {
     try {
-        const raw = localStorage.getItem(LS_KEY)
-        if (!raw) return structuredClone(DEFAULT_SETTINGS)
-        const parsed = JSON.parse(raw)
-        // Merge defaults so new keys always exist
-        return {
-            ...DEFAULT_SETTINGS,
-            ...parsed,
-            columnVisibility: { ...DEFAULT_SETTINGS.columnVisibility, ...(parsed.columnVisibility || {}) },
+        const { data, error } = await supabase
+            .from('settings')
+            .select('config')
+            .eq('id', 1)
+            .single()
+
+        if (error && error.code !== 'PGRST116') { // Ignore "No rows found"
+            console.error('Error loading settings from DB:', error)
         }
-    } catch {
-        return structuredClone(DEFAULT_SETTINGS)
+
+        if (data && data.config) {
+            const parsed = typeof data.config === 'string' ? JSON.parse(data.config) : data.config
+            // Merge defaults so new keys always exist
+            return {
+                ...DEFAULT_SETTINGS,
+                ...parsed,
+                columnVisibility: { ...DEFAULT_SETTINGS.columnVisibility, ...(parsed.columnVisibility || {}) },
+            }
+        }
+    } catch (err) {
+        console.error('Failed to parse DB settings fallback to default:', err)
+    }
+    
+    return structuredClone(DEFAULT_SETTINGS)
+}
+
+export async function saveSettings(settings) {
+    try {
+        const payload = typeof settings === 'string' ? JSON.parse(settings) : settings
+        const { error } = await supabase
+            .from('settings')
+            .upsert({ id: 1, config: payload })
+
+        if (error) {
+            console.error('Error upserting settings:', error)
+        }
+    } catch (err) {
+        console.error('Error saving settings DB request:', err)
     }
 }
 
-export function saveSettings(settings) {
-    localStorage.setItem(LS_KEY, JSON.stringify(settings))
-}
-
-export function resetSettings() {
-    localStorage.removeItem(LS_KEY)
+export async function resetSettings() {
+    try {
+        await supabase.from('settings').delete().eq('id', 1)
+    } catch (err) {
+        console.error('Error resetting settings in DB:', err)
+    }
     return structuredClone(DEFAULT_SETTINGS)
 }
