@@ -5,7 +5,7 @@ import { StatusBadge, PriorityBadge, MetricCard, Toast, ElegantDateTimeInput, fo
 import {
   Users, CheckCircle, Star, Clock, Search, RefreshCw,
   Globe, Facebook, Building2, Mail, Phone, Edit2, Save, X, AlertTriangle,
-  ChevronLeft, ChevronRight, Calendar, Plus
+  ChevronLeft, ChevronRight, Calendar, Plus, MessageSquare
 } from 'lucide-react'
 
 import { syncGoogleSheets } from '../lib/sheets'
@@ -14,7 +14,13 @@ import { DEFAULT_COLUMNS } from '../lib/settings'
 export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, darkMode, newLeadIds = new Set(), settings = {} }) {
   const statusOpts = settings.statusOptions || STATUS_OPTIONS
   const priorityOpts = settings.priorityOptions || PRIORITY_OPTIONS
-  const assignedOpts = settings.assignedOptions || ASSIGNED_OPTIONS
+  
+  const assignedOpts = useMemo(() => {
+    const baseOpts = settings.assignedOptions || ASSIGNED_OPTIONS
+    const fromLeads = (leads || []).map(l => l.assigned_to).filter(Boolean)
+    return [...new Set([...baseOpts, ...fromLeads])].sort()
+  }, [settings.assignedOptions, leads])
+
   const colVis = settings.columnVisibility || Object.fromEntries(DEFAULT_COLUMNS.map(c => [c.key, true]))
   const customCols = settings.customColumns || []
 
@@ -118,6 +124,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   // ── Save edits to Cloud Database ─────────────────────────────────────────────────
   const handleSave = async (id) => {
     setSaving(true)
+    const leadTarget = leads.find(l => l.id === id)
     const corePayload = {
       status: editData.status ? editData.status : null,
       feedback: editData.feedback || null,
@@ -127,6 +134,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       business_type: editData.business_type || null,
       looking_for: editData.looking_for || null,
       website: editData.website || null,
+      company: editData.company || null,
     }
     customCols.forEach(col => {
       corePayload[col.key] = (col.type === 'date' && editData[col.key]) ? toISODatetime(editData[col.key]) : (editData[col.key] || null)
@@ -136,6 +144,37 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       follow_up_at: editData.follow_up_at ? toISODatetime(editData.follow_up_at) : null,
     }
 
+    const isExp = editData.qual_experience === 'Yes'
+    const finalRole = editData.qual_role === 'Other' ? editData.qual_role_custom : editData.qual_role
+    
+    let score = 0
+    score += finalRole === 'Decision Maker' ? 3 : 1
+    score += editData.qual_timeline === 'Immediate' ? 3 : 1
+    score += editData.qual_scale === '1000+' ? 2 : 1
+    score += isExp ? 2 : 0
+    score += editData.qual_use_case && editData.qual_use_case.trim() !== '' ? 3 : 1
+    
+    let category = 'Cold'
+    let action_plan = 'Do not pass'
+    if (score >= 10) { category = 'Hot'; action_plan = 'Immediate sales handoff' } 
+    else if (score >= 6) { category = 'Warm'; action_plan = 'Nurture + schedule call' }
+
+    const qualPayload = {
+      lead_id: id,
+      company_name: leadTarget?.company || null,
+      role: finalRole || null,
+      industry: editData.qual_industry || null,
+      use_case: editData.qual_use_case || null,
+      scale: editData.qual_scale || null,
+      geography: editData.qual_geography || null,
+      timeline: editData.qual_timeline || null,
+      experience: isExp,
+      score,
+      category,
+      action_plan
+    }
+
+    let newQual = null
     if (dbReady) {
       // Try full payload first (includes follow_up_at)
       let { error } = await supabase.from('leads').update(fullPayload).eq('id', id)
@@ -146,8 +185,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
         const retry = await supabase.from('leads').update(corePayload).eq('id', id)
         error = retry.error
         if (!error) {
+          try {
+            const qRes = await supabase.from('lead_qualifications').upsert(qualPayload, { onConflict: 'lead_id' }).select().single()
+            if (qRes.data) newQual = qRes.data
+          } catch(e) {}
           showToast('Saved ✓  (run migration SQL to enable Follow-up field)', 'warning')
-          setLeads(prev => prev.map(l => l.id === id ? { ...l, ...corePayload } : l))
+          setLeads(prev => prev.map(l => l.id === id ? { ...l, ...corePayload, lead_qualifications: newQual ? [newQual] : l.lead_qualifications } : l))
           setEditingId(null)
           setSaving(false)
           return
@@ -160,12 +203,20 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
         setSaving(false)
         return
       }
+
+      // Upsert qualifications
+      try {
+        const qRes = await supabase.from('lead_qualifications').upsert(qualPayload, { onConflict: 'lead_id' }).select().single()
+        if (qRes.data) newQual = qRes.data
+      } catch(e) {}
+
       showToast('Saved to Cloud DB ✓')
     } else {
       showToast('Saved locally (DB not connected yet)', 'error')
+      newQual = qualPayload
     }
 
-    setLeads(prev => prev.map(l => l.id === id ? { ...l, ...fullPayload } : l))
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, ...fullPayload, lead_qualifications: newQual ? [newQual] : l.lead_qualifications } : l))
     setEditingId(null)
     setSaving(false)
   }
@@ -173,7 +224,24 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   const handleEdit = (lead, e) => {
     e.stopPropagation()
     setEditingId(lead.id)
+    
+    const qual = lead.lead_qualifications && lead.lead_qualifications[0] ? lead.lead_qualifications[0] : {}
+    let role = qual.role || ''
+    let customRole = ''
+    if (role && !['Decision Maker', 'Manager', 'Other'].includes(role)) {
+       customRole = role
+       role = 'Other'
+    }
+
     const initEditData = {
+      // Core Lead Identity
+      message: lead.message || '',
+      company: lead.company || '',
+      email: lead.email || '',
+      phone: lead.phone || '',
+      source: lead.source || '',
+      
+      // Operational CRM Fields
       status: lead.status || '',
       feedback: lead.feedback || '',
       remarks: lead.remarks || '',
@@ -183,6 +251,16 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       looking_for: lead.looking_for || '',
       website: lead.website || '',
       follow_up_at: lead.follow_up_at ? formatToLocalDatetime(lead.follow_up_at) : '',
+      
+      // Qualifications
+      qual_role: role,
+      qual_role_custom: customRole,
+      qual_industry: qual.industry || '',
+      qual_use_case: qual.use_case || '',
+      qual_scale: qual.scale || '',
+      qual_geography: qual.geography || '',
+      qual_timeline: qual.timeline || '',
+      qual_experience: qual.experience !== undefined ? (qual.experience ? 'Yes' : 'No') : '',
     }
     customCols.forEach(c => {
       initEditData[c.key] = (c.type === 'date' && lead[c.key]) ? formatToLocalDatetime(lead[c.key]) : (lead[c.key] || '')
@@ -252,6 +330,225 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   return (
     <div className="space-y-5">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* ── Edit Lead Modal ─────────────────────────────────────────────── */}
+      {editingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6EBF2] bg-[#F9FBFF] shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#2F6BFF]/10 flex items-center justify-center">
+                  <Edit2 size={20} className="text-[#2F6BFF]" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#2F3542]">Edit / Qualify Lead</h3>
+                  <p className="text-xs text-[#9AA5B1]">Update CRM details and lead scoring factors simultaneously.</p>
+                </div>
+              </div>
+              <button onClick={() => !saving && setEditingId(null)} className="p-2 rounded-lg text-[#9AA5B1] hover:bg-red-50 hover:text-red-500 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8">
+              {/* Lead Identity & Context */}
+              <section className="bg-white border border-[#E6EBF2] rounded-xl p-5 shadow-sm">
+                <h4 className="text-xs font-bold text-[#2F3542] uppercase tracking-wider mb-4 border-b border-[#EEF2F7] pb-2">Lead Information</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#9AA5B1] uppercase mb-1">Phone Number</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 rounded-lg border border-gray-100">
+                      <Phone size={14} className="text-gray-400" />
+                      {editData.phone || '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#9AA5B1] uppercase mb-1">Email</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 rounded-lg border border-gray-100 overflow-hidden">
+                      <Mail size={14} className="text-gray-400 shrink-0" />
+                      <span className="truncate">{editData.email || '—'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#9AA5B1] uppercase mb-1">Source</label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 rounded-lg border border-gray-100">
+                      {editData.source === 'Website' ? <Globe size={14} className="text-blue-500" /> : <Facebook size={14} className="text-purple-500" />}
+                      {editData.source || '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#9AA5B1] uppercase mb-1 flex justify-between">
+                      Company Name <span className="text-[#2F6BFF] normal-case tracking-normal">editable</span>
+                    </label>
+                    <input type="text" value={editData.company || ''} onChange={e => setEditData(d => ({ ...d, company: e.target.value }))} className="w-full px-3 py-2 text-sm border-2 border-blue-100 hover:border-blue-300 rounded-lg focus:outline-none focus:border-[#2F6BFF] bg-white transition-colors" placeholder="Enter company name..." />
+                  </div>
+                  <div className="md:col-span-4 mt-2">
+                    <label className="block text-[10px] font-bold text-[#9AA5B1] uppercase mb-1">Original Lead Message</label>
+                    <div className="bg-blue-50/40 border border-blue-100 rounded-lg p-3.5 flex gap-3 items-start">
+                      <MessageSquare size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                      <p className={`text-sm leading-relaxed ${editData.message ? 'text-[#2F3542] italic font-medium' : 'text-gray-400 italic'}`}>
+                        {editData.message ? `"${editData.message}"` : 'No message provided by this lead.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Core CRM Information */}
+              <section>
+                <h4 className="text-xs font-bold text-[#2F6BFF] uppercase tracking-wider mb-4 border-b border-blue-100 pb-2">Core CRM Details</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Status</label>
+                    <select value={editData.status} onChange={e => setEditData(d => ({ ...d, status: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF]">
+                      <option value="">— Select —</option>
+                      {statusOpts.map(s => <option key={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Priority</label>
+                    <select value={editData.priority} onChange={e => setEditData(d => ({ ...d, priority: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF]">
+                      <option value="">— Select —</option>
+                      {priorityOpts.map(p => <option key={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Assigned To</label>
+                    <select value={editData.assigned_to} onChange={e => setEditData(d => ({ ...d, assigned_to: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF]">
+                      <option value="">— Unassigned —</option>
+                      {assignedOpts.map(a => <option key={a}>{a}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Follow-up Time</label>
+                    <ElegantDateTimeInput value={editData.follow_up_at || ''} onChange={e => setEditData(d => ({ ...d, follow_up_at: e.target.value }))} className="w-full" darkMode={darkMode} />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Business Type</label>
+                    <input type="text" value={editData.business_type || ''} onChange={e => setEditData(d => ({ ...d, business_type: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Looking For</label>
+                    <input type="text" value={editData.looking_for || ''} onChange={e => setEditData(d => ({ ...d, looking_for: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF]" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Website</label>
+                    <input type="text" value={editData.website} onChange={e => setEditData(d => ({ ...d, website: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF]" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Notes & Feedback */}
+              <section>
+                <h4 className="text-xs font-bold text-[#20C997] uppercase tracking-wider mb-4 border-b border-emerald-100 pb-2">Notes & Remarks</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Feedback / Updates</label>
+                    <textarea value={editData.feedback} onChange={e => setEditData(d => ({ ...d, feedback: e.target.value }))} rows={3} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#20C997] resize-none" placeholder="Sales feedback..."></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B778C] mb-1">Internal Remarks</label>
+                    <textarea value={editData.remarks} onChange={e => setEditData(d => ({ ...d, remarks: e.target.value }))} rows={3} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#20C997] resize-none" placeholder="Internal context..."></textarea>
+                  </div>
+                </div>
+              </section>
+
+              {/* Qualification Engine */}
+              <section className="bg-gradient-to-br from-indigo-50 to-blue-50/50 p-5 rounded-xl border border-blue-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <Star size={16} className="text-blue-500" />
+                  <h4 className="text-sm font-black text-blue-900 uppercase tracking-wider">Qualification Engine</h4>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Role</label>
+                    <select value={editData.qual_role} onChange={e => setEditData(d => ({ ...d, qual_role: e.target.value }))} className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white">
+                      <option value="">— Select —</option><option value="Decision Maker">Decision Maker</option><option value="Manager">Manager</option><option value="Other">Other</option>
+                    </select>
+                    {editData.qual_role === 'Other' && (
+                      <input type="text" value={editData.qual_role_custom} onChange={e => setEditData(d => ({ ...d, qual_role_custom: e.target.value }))} placeholder="Specify Expected Role..." className="w-full mt-2 text-xs border border-blue-400 rounded-lg px-2 py-2 outline-none bg-blue-50 focus:border-blue-600" />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Industry</label>
+                    <select value={editData.qual_industry} onChange={e => setEditData(d => ({ ...d, qual_industry: e.target.value }))} className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white">
+                      <option value="">— Select —</option>
+                      <option value="Agriculture">Agriculture</option><option value="Retail">Retail</option>
+                      <option value="Tech">Tech</option><option value="Manufacturing">Manufacturing</option>
+                      <option value="Logistics">Logistics</option><option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Use Case</label>
+                    <select value={editData.qual_use_case} onChange={e => setEditData(d => ({ ...d, qual_use_case: e.target.value }))} className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white">
+                      <option value="">— Select —</option>
+                      <option value="Rabi">Rabi</option><option value="Kharif">Kharif</option>
+                      <option value="Retail">Retail</option><option value="QR">QR</option>
+                      <option value="Cashback">Cashback</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Scale</label>
+                    <select value={editData.qual_scale} onChange={e => setEditData(d => ({ ...d, qual_scale: e.target.value }))} className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white">
+                      <option value="">— Select —</option>
+                      <option value="<100">&lt;100</option><option value="100–1000">100–1000</option><option value="1000+">1000+</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Timeline</label>
+                    <select value={editData.qual_timeline} onChange={e => setEditData(d => ({ ...d, qual_timeline: e.target.value }))} className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white">
+                      <option value="">— Select —</option>
+                      <option value="Immediate">Immediate</option><option value="1–2 months">1–2 months</option><option value="Exploring">Exploring</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Prior Experience</label>
+                    <select value={editData.qual_experience} onChange={e => setEditData(d => ({ ...d, qual_experience: e.target.value }))} className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white">
+                      <option value="">— Select —</option><option value="Yes">Yes</option><option value="No">No</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="block text-xs font-bold text-blue-800 mb-1">Geography / Location</label>
+                    <input type="text" value={editData.qual_geography} onChange={e => setEditData(d => ({ ...d, qual_geography: e.target.value }))} placeholder="E.g. Mumbai, MH" className="w-full text-xs border border-blue-200 rounded-lg px-2 py-2 focus:border-blue-500 outline-none bg-white" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Custom Columns (if any) */}
+              {customCols.length > 0 && (
+                <section>
+                  <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider mb-4 border-b border-orange-100 pb-2">Custom Fields</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {customCols.map(col => (
+                      <div key={col.key}>
+                        <label className="block text-xs font-semibold text-[#6B778C] mb-1 capitalize">{col.label}</label>
+                        {col.type === 'date' ? (
+                          <ElegantDateTimeInput value={editData[col.key] || ''} onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))} className="w-full" darkMode={darkMode} />
+                        ) : (
+                          <input type={col.type === 'number' ? 'number' : 'text'} value={editData[col.key] || ''} onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))} className="w-full px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-orange-400" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-[#E6EBF2] bg-gray-50 flex items-center justify-end gap-3 shrink-0 rounded-b-2xl">
+              <button onClick={() => !saving && setEditingId(null)} className="px-5 py-2 text-sm text-[#6B778C] hover:text-[#2F3542] font-bold transition-colors">
+                Cancel
+              </button>
+              <button onClick={() => handleSave(editingId)} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-[#2F6BFF] text-white text-sm font-bold rounded-xl hover:bg-[#1A4FCC] transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
+                <Save size={16} />{saving ? 'Saving...' : 'Save All Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Add Lead Modal ─────────────────────────────────────────────── */}
       {addModalOpen && (
@@ -615,39 +912,19 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                       
                       {/* Business Type */}
                       {isColVisible('business_type') && (
-                        <td className="px-4 py-3 text-xs" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id ? (
-                            <input value={editData.business_type} onChange={e => setEditData(d => ({ ...d, business_type: e.target.value }))}
-                              className="w-32 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]" />
-                          ) : (
-                            <span className="truncate max-w-32 block">{lead.business_type || '—'}</span>
-                          )}
-                        </td>
+                        <td className="px-4 py-3 text-xs w-32 truncate max-w-[8rem]">{lead.business_type || '—'}</td>
                       )}
 
                       {/* Looking For */}
                       {isColVisible('looking_for') && (
-                        <td className="px-4 py-3 text-xs" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id ? (
-                            <input value={editData.looking_for} onChange={e => setEditData(d => ({ ...d, looking_for: e.target.value }))}
-                              className="w-32 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]" />
-                          ) : (
-                            <span className="truncate max-w-32 block">{lead.looking_for || '—'}</span>
-                          )}
-                        </td>
+                        <td className="px-4 py-3 text-xs w-32 truncate max-w-[8rem]">{lead.looking_for || '—'}</td>
                       )}
 
                       {/* Website */}
                       {isColVisible('website') && (
-                        <td className="px-4 py-3 text-xs" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id ? (
-                            <input value={editData.website} onChange={e => setEditData(d => ({ ...d, website: e.target.value }))}
-                              className="w-32 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]" />
-                          ) : (
-                            <span className="truncate max-w-32 block">{lead.website || '—'}</span>
-                          )}
-                        </td>
+                        <td className="px-4 py-3 text-xs w-32 truncate max-w-[8rem]">{lead.website || '—'}</td>
                       )}
+                      
                       {/* Date */}
                       {isColVisible('date') && (
                         <td className="px-4 py-3 text-xs text-[#9AA5B1] whitespace-nowrap">
@@ -657,127 +934,68 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                           }) : '—'}
                         </td>
                       )}
+                      
                       {/* Follow-up */}
                       {isColVisible('follow_up_at') && (
-                        <td className="px-4 py-3" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id
-                            ? <ElegantDateTimeInput
-                              value={editData.follow_up_at}
-                              onChange={e => setEditData(d => ({ ...d, follow_up_at: e.target.value }))}
-                              className="w-44"
-                              darkMode={darkMode}
-                            />
-                            : lead.follow_up_at ? (() => {
-                              const fu = new Date(lead.follow_up_at)
-                              const now = new Date()
-                              const isToday = fu.toDateString() === now.toDateString()
-                              const isOverdue = fu < now
-                              return (
-                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap ${isOverdue ? 'bg-red-50 text-red-600 border border-red-200'
-                                  : isToday ? 'bg-orange-50 text-orange-600 border border-orange-200'
-                                    : 'bg-green-50 text-green-600 border border-green-200'
-                                  }`}>
-                                  <Calendar size={9} />
-                                  {fu.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
-                                </span>
-                              )
-                            })()
-                              : <span className="text-[#C5CDD8] text-xs">—</span>
-                          }
+                        <td className="px-4 py-3">
+                          {lead.follow_up_at ? (() => {
+                            const fu = new Date(lead.follow_up_at)
+                            const now = new Date()
+                            const isToday = fu.toDateString() === now.toDateString()
+                            const isOverdue = fu < now
+                            return (
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap ${isOverdue ? 'bg-red-50 text-red-600 border border-red-200'
+                                : isToday ? 'bg-orange-50 text-orange-600 border border-orange-200'
+                                : 'bg-green-50 text-green-600 border border-green-200'
+                              }`}>
+                                <Calendar size={9} />
+                                {fu.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
+                              </span>
+                            )
+                          })() : <span className="text-[#C5CDD8] text-xs">—</span>}
                         </td>
                       )}
+                      
                       {/* Status */}
                       {isColVisible('status') && (
-                        <td className="px-4 py-3" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id
-                            ? <select value={editData.status} onChange={e => setEditData(d => ({ ...d, status: e.target.value }))}
-                              className="text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF] w-32">
-                              <option value="">— Select —</option>
-                              {statusOpts.map(s => <option key={s}>{s}</option>)}
-                            </select>
-                            : <StatusBadge status={lead.status} />
-                          }
-                        </td>
+                        <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
                       )}
+                      
                       {/* Priority */}
                       {isColVisible('priority') && (
-                        <td className="px-4 py-3" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id
-                            ? <select value={editData.priority} onChange={e => setEditData(d => ({ ...d, priority: e.target.value }))}
-                              className="text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF] w-28">
-                              <option value="">— Select —</option>
-                              {priorityOpts.map(p => <option key={p}>{p}</option>)}
-                            </select>
-                            : <PriorityBadge priority={lead.priority} />
-                          }
-                        </td>
+                        <td className="px-4 py-3"><PriorityBadge priority={lead.priority} /></td>
                       )}
+                      
                       {/* Assigned To */}
                       {isColVisible('assigned_to') && (
-                        <td className="px-4 py-3" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id
-                            ? <select value={editData.assigned_to} onChange={e => setEditData(d => ({ ...d, assigned_to: e.target.value }))}
-                              className="text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF] w-24">
-                              <option value="">— Select —</option>
-                              {assignedOpts.map(a => <option key={a}>{a}</option>)}
-                            </select>
-                            : <span className={`text-xs font-medium ${lead.assigned_to ? 'text-[#2F3542]' : 'text-gray-400 italic'}`}>
-                              {lead.assigned_to || '—'}
-                            </span>
-                          }
+                        <td className="px-4 py-3">
+                          <span className={`text-xs font-medium ${lead.assigned_to ? 'text-[#2F3542]' : 'text-gray-400 italic'}`}>
+                            {lead.assigned_to || '—'}
+                          </span>
                         </td>
                       )}
+                      
                       {/* Custom Columns */}
                       {customCols.filter(col => isColVisible(col.key)).map(col => (
-                        <td key={col.key} className="px-4 py-3 text-xs text-[#2F3542]" onClick={e => editingId === lead.id && e.stopPropagation()}>
-                          {editingId === lead.id ? (
-                            col.type === 'date' ? (
-                              <ElegantDateTimeInput
-                                value={editData[col.key] || ''}
-                                onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))}
-                                className="w-40"
-                                darkMode={darkMode}
-                              />
-                            ) : (
-                              <input
-                                type={col.type === 'number' ? 'number' : 'text'}
-                                value={editData[col.key] || ''}
-                                onChange={e => setEditData(d => ({ ...d, [col.key]: e.target.value }))}
-                                className="w-24 text-xs border border-[#E6EBF2] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#2F6BFF]"
-                              />
-                            )
-                          ) : (
-                            <span className="truncate max-w-28 block">
+                        <td key={col.key} className="px-4 py-3 text-xs text-[#2F3542]">
+                           <span className="truncate max-w-28 block">
                               {col.type === 'date' && lead[col.key] ? new Date(lead[col.key]).toLocaleDateString() : (lead[col.key] || '—')}
-                            </span>
-                          )}
+                           </span>
                         </td>
                       ))}
 
                       {/* Actions */}
                       {isColVisible('actions') && (
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                          {editingId === lead.id
-                            ? <div className="flex gap-1.5">
-                              <button onClick={() => handleSave(lead.id)} disabled={saving}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 disabled:opacity-60">
-                                <Save size={11} />{saving ? '...' : 'Save'}
-                              </button>
-                              <button onClick={e => { e.stopPropagation(); setEditingId(null) }}
-                                className="px-2 py-1.5 bg-gray-100 text-gray-500 text-xs rounded-lg hover:bg-gray-200">
-                                <X size={11} />
-                              </button>
-                            </div>
-                            : <button onClick={e => handleEdit(lead, e)}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-[#E9F2FF] text-[#2F6BFF] text-xs font-bold rounded-lg hover:bg-[#2F6BFF] hover:text-white transition-colors">
-                              <Edit2 size={11} />Edit
-                            </button>
-                          }
+                          <button onClick={e => handleEdit(lead, e)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-[#E9F2FF] text-[#2F6BFF] text-xs font-bold rounded-lg hover:bg-[#2F6BFF] hover:text-white transition-colors">
+                            <Edit2 size={11} />Edit
+                          </button>
                         </td>
                       )}
                     </tr>
 
-                    {/* Expanded row — message, feedback, remarks, follow-up */}
+                    {/* Expanded row — strictly View Only for Expanded Info! */}
                     {expandedRow === lead.id && (
                       <tr key={`exp-${lead.id}`} className="bg-[#F9FBFF] border-b border-[#EEF2F7]">
                         <td colSpan={visibleColumns.length} className="px-6 py-4">
@@ -787,28 +1005,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                               <p className="text-sm text-[#2F3542] leading-relaxed">{lead.message || <span className="text-gray-400 italic">No message</span>}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-[#9AA5B1] uppercase tracking-wide mb-1.5">
-                                Feedback {editingId === lead.id && <span className="text-[#2F6BFF] normal-case ml-1 text-[10px]">✎ editing</span>}
-                              </p>
-                              {editingId === lead.id
-                                ? <textarea value={editData.feedback} onChange={e => setEditData(d => ({ ...d, feedback: e.target.value }))}
-                                  placeholder="Add feedback..."
-                                  rows={2}
-                                  className="w-full text-sm border-2 border-[#2F6BFF] rounded-lg px-2.5 py-1.5 focus:outline-none bg-white" />
-                                : <p className="text-sm text-[#2F3542]">{lead.feedback || <span className="text-gray-400 italic">—</span>}</p>
-                              }
+                              <p className="text-xs font-bold text-[#9AA5B1] uppercase tracking-wide mb-1.5">Feedback</p>
+                              <p className="text-sm text-[#2F3542]">{lead.feedback || <span className="text-gray-400 italic">—</span>}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-[#9AA5B1] uppercase tracking-wide mb-1.5">
-                                Remarks {editingId === lead.id && <span className="text-[#2F6BFF] normal-case ml-1 text-[10px]">✎ editing</span>}
-                              </p>
-                              {editingId === lead.id
-                                ? <textarea value={editData.remarks} onChange={e => setEditData(d => ({ ...d, remarks: e.target.value }))}
-                                  placeholder="Add remarks..."
-                                  rows={2}
-                                  className="w-full text-sm border-2 border-[#2F6BFF] rounded-lg px-2.5 py-1.5 focus:outline-none bg-white" />
-                                : <p className="text-sm text-[#2F3542]">{lead.remarks || <span className="text-gray-400 italic">—</span>}</p>
-                              }
+                              <p className="text-xs font-bold text-[#9AA5B1] uppercase tracking-wide mb-1.5">Remarks</p>
+                              <p className="text-sm text-[#2F3542]">{lead.remarks || <span className="text-gray-400 italic">—</span>}</p>
                             </div>
                             <div>
                               <p className="text-xs font-bold text-[#9AA5B1] uppercase tracking-wide mb-1.5">Follow-up Scheduled</p>
@@ -821,6 +1023,48 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                                 </p>
                                 : <p className="text-sm text-gray-400 italic">Not scheduled</p>
                               }
+                            </div>
+                            
+                            {/* Qualification / Scoring Module inside Expanded Row */}
+                            <div className="col-span-4 mt-2 pt-5 border-t border-[#EEF2F7]">
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="p-1.5 rounded-md bg-[#2F6BFF]/10">
+                                  <Star size={14} className="text-[#2F6BFF]" />
+                                </div>
+                                <h4 className="text-sm font-bold text-[#2F3542]">Lead Qualification Profile</h4>
+                              </div>
+                              
+                              {lead.lead_qualifications && lead.lead_qualifications.length > 0 ? (
+                                (() => {
+                                  const qual = lead.lead_qualifications[0]
+                                  return (
+                                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 bg-white p-4 rounded-xl border border-[#EEF2F7] relative overflow-hidden shadow-sm">
+                                      <div className={`absolute right-0 top-0 bottom-0 w-1 flex flex-col ${
+                                        qual.category === 'Hot' ? 'bg-red-500' : qual.category === 'Warm' ? 'bg-orange-500' : 'bg-blue-500'
+                                      }`} />
+                                      <div><p className="text-[10px] text-[#9AA5B1] uppercase">Category</p><p className={`font-black text-sm ${qual.category === 'Hot' ? 'text-red-500' : qual.category === 'Warm' ? 'text-orange-500' : 'text-blue-500'}`}>{qual.category} ({qual.score} Pt)</p></div>
+                                      <div><p className="text-[10px] text-[#9AA5B1] uppercase">Role</p><p className="font-semibold text-xs text-[#2F3542]">{qual.role || '—'}</p></div>
+                                      <div><p className="text-[10px] text-[#9AA5B1] uppercase">Industry</p><p className="font-semibold text-xs text-[#2F3542]">{qual.industry || '—'}</p></div>
+                                      <div><p className="text-[10px] text-[#9AA5B1] uppercase">Use Case</p><p className="font-semibold text-xs text-[#2F3542]">{qual.use_case || '—'}</p></div>
+                                      <div><p className="text-[10px] text-[#9AA5B1] uppercase">Scale & Timeline</p><p className="font-semibold text-xs text-[#2F3542]">{qual.scale || '—'} / {qual.timeline || '—'}</p></div>
+                                      <div className="col-span-5 pt-2 mt-1 border-t border-dashed border-[#EEF2F7]">
+                                         <span className="text-[10px] text-[#9AA5B1] mr-2 uppercase">Action Plan:</span>
+                                         <span className="text-xs font-bold text-[#2F3542]">{qual.action_plan}</span>
+                                      </div>
+                                    </div>
+                                  )
+                                })()
+                              ) : (
+                                <div className="bg-[#F9FBFF] border border-dashed border-[#C5CDD8] rounded-xl p-4 flex items-center justify-between text-left">
+                                  <div>
+                                    <p className="text-sm font-semibold text-[#2F3542]">No qualification profile yet.</p>
+                                    <p className="text-xs text-[#6B778C] mt-0.5">Click the 'Edit' button on this lead to assess and score them.</p>
+                                  </div>
+                                  <button onClick={(e) => handleEdit(lead, e)} className="px-4 py-1.5 text-xs font-bold bg-white text-[#2F6BFF] border border-[#2F6BFF]/30 rounded-lg hover:bg-[#E9F2FF] transition-colors shadow-sm">
+                                    Assess Lead
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>

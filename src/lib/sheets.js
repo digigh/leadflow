@@ -188,11 +188,10 @@ export const syncGoogleSheets = async () => {
             if (metaResult.rows && metaResult.rows.length > 0) {
                 // Meta lead columns can be name, full_name, email, phone, etc. Let's cover possible values
                 const metaLeads = parseSheetData(metaResult, 'Meta', ['full_name', 'name', 'email', 'phone', 'first_name', 'phone number']);
-                // Override the date to be the exact time it was pulled from Google Sheet
-                const fetchTime = new Date().toISOString();
+                // Only provide a fallback fetchTime date if there isn't one already parsed
                 const timestampedMetaLeads = metaLeads.map(lead => ({
                     ...lead,
-                    date: fetchTime
+                    date: lead.date && lead.date.length > 4 ? lead.date : new Date().toISOString()
                 }));
                 allLeads.push(...timestampedMetaLeads);
             }
@@ -219,10 +218,9 @@ export const syncGoogleSheets = async () => {
 
             if (newMetaResult.rows && newMetaResult.rows.length > 0) {
                 const newMetaLeads = parseSheetData(newMetaResult, 'New Meta Leads March', ['full_name', 'name', 'email', 'phone']);
-                const fetchTime = new Date().toISOString();
                 const timestampedNewMetaLeads = newMetaLeads.map(lead => ({
                     ...lead,
-                    date: fetchTime
+                    date: lead.date && lead.date.length > 4 ? lead.date : new Date().toISOString()
                 }));
                 allLeads.push(...timestampedNewMetaLeads);
             }
@@ -239,7 +237,21 @@ export const syncGoogleSheets = async () => {
         const uniqueAllLeadsMap = new Map();
         for (const lead of allLeads) {
             const key = lead.email ? lead.email.toLowerCase() : lead.phone;
-            uniqueAllLeadsMap.set(key, lead);
+            if (!uniqueAllLeadsMap.has(key)) {
+                uniqueAllLeadsMap.set(key, lead);
+            } else {
+                const existingLeadInMap = uniqueAllLeadsMap.get(key);
+                try {
+                    const existingDate = new Date(existingLeadInMap.date).getTime();
+                    const newDate = new Date(lead.date).getTime();
+                    // Overwrite ONLY if the new lead's date is strictly more recent
+                    if (newDate > existingDate) {
+                        uniqueAllLeadsMap.set(key, lead);
+                    }
+                } catch (err) {
+                    uniqueAllLeadsMap.set(key, lead);
+                }
+            }
         }
         const uniqueAllLeads = Array.from(uniqueAllLeadsMap.values());
 
