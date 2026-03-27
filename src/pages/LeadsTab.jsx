@@ -321,10 +321,13 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   }, [filtered.length, currentPage, totalPages])
 
   const stats = {
-    total: leads.length,
-    needsAction: leads.filter(l => !l.status).length,
-    hot: leads.filter(l => l.status === 'Interested' || l.status === 'Follow Up').length,
-    converted: leads.filter(l => l.status === 'Converted').length,
+    total: filtered.length,
+    needsAction: filtered.filter(l => !l.status || l.status === 'New').length,
+    interested: filtered.filter(l => l.status === 'Interested').length,
+    followUp: filtered.filter(l => l.status === 'Follow Up' || !!l.follow_up_at).length,
+    converted: filtered.filter(l => l.status === 'Converted').length,
+    qualified: filtered.filter(l => l.lead_qualifications && l.lead_qualifications.length > 0).length,
+    hot: filtered.filter(l => l.lead_qualifications && l.lead_qualifications[0]?.category === 'Hot').length,
   }
 
   return (
@@ -738,12 +741,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
         </div>
       )}
 
-      {/* Metrics */}
+      {/* Metrics — reactive to current filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard icon={Users} label="Total Leads" value={stats.total} trend={1} trendVal={12} color="#2F6BFF" />
+        <MetricCard icon={Users} label="Leads in View" value={stats.total} color="#2F6BFF" />
         <MetricCard icon={Clock} label="Needs Action" value={stats.needsAction} color="#F5A623" />
-        <MetricCard icon={Star} label="Hot Leads" value={stats.hot} trend={1} trendVal={5} color="#7B3FFF" />
-        <MetricCard icon={CheckCircle} label="Converted" value={stats.converted} trend={1} trendVal={3} color="#2ECC71" />
+        <MetricCard icon={Star} label="Qualified" value={stats.qualified} color="#7B3FFF" />
+        <MetricCard icon={CheckCircle} label="Follow-ups Scheduled" value={stats.followUp} color="#2ECC71" />
       </div>
 
       {/* Table */}
