@@ -75,11 +75,13 @@ export default function Dashboard({ onLogout }) {
       if (error) throw error
 
       if (data && data.length > 0) {
+        const validData = data.filter(l => l.status !== '--Delete--');
+        
         if (opts.trackNew && knownIdsRef.current.size > 0) {
-          const incoming = new Set(data.map(l => l.id))
+          const incoming = new Set(validData.map(l => l.id))
           const fresh = [...incoming].filter(id => !knownIdsRef.current.has(id))
           if (fresh.length > 0) {
-            const freshLeads = data.filter(l => fresh.includes(l.id))
+            const freshLeads = validData.filter(l => fresh.includes(l.id))
             const notif = {
               id: Date.now(),
               count: fresh.length,
@@ -93,8 +95,8 @@ export default function Dashboard({ onLogout }) {
             highlightTimerRef.current = setTimeout(clearHighlights, LIVE_HIGHLIGHT_MS)
           }
         }
-        knownIdsRef.current = new Set(data.map(l => l.id))
-        setLeads(data)
+        knownIdsRef.current = new Set(validData.map(l => l.id))
+        setLeads(validData)
         setDbReady(true)
       } else {
         setLeads(MOCK_LEADS)

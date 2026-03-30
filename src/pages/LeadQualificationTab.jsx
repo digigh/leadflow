@@ -39,6 +39,8 @@ export default function LeadQualificationTab({ leads, darkMode }) {
       if (!l.lead_qualifications || l.lead_qualifications.length === 0) return false
       
       const qual = l.lead_qualifications[0]
+      if (!qual) return false
+
       if (filterOwner !== 'All' && (l.assigned_to || 'Unassigned') !== filterOwner) return false
       if (filterIndustry !== 'All' && qual.industry !== filterIndustry) return false
       
@@ -47,7 +49,7 @@ export default function LeadQualificationTab({ leads, darkMode }) {
         if (![l.lead_name, l.company, qual.company_name].some(v => v?.toLowerCase().includes(term))) return false
       }
       return true
-    }).sort((a,b) => b.lead_qualifications[0].score - a.lead_qualifications[0].score)
+    }).sort((a,b) => (b.lead_qualifications[0]?.score || 0) - (a.lead_qualifications[0]?.score || 0))
   }, [leads, filterOwner, filterIndustry, searchTerm])
 
   return (

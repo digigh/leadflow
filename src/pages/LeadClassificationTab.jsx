@@ -45,6 +45,7 @@ export default function LeadClassificationTab({ leads, darkMode }) {
       if (!l.lead_qualifications || l.lead_qualifications.length === 0) return false
       
       const qual = l.lead_qualifications[0]
+      if (!qual) return false
 
       if (filterSource !== 'All' && l.source !== filterSource) return false
       if (filterOwner !== 'All') {
@@ -71,9 +72,9 @@ export default function LeadClassificationTab({ leads, darkMode }) {
     })
   }, [leads, filterSource, filterOwner, filterIndustry, filterDate])
 
-  const hotLeads = filteredAndAssessedLeads.filter(l => l.lead_qualifications[0].category === 'Hot').sort((a,b) => b.lead_qualifications[0].score - a.lead_qualifications[0].score)
-  const warmLeads = filteredAndAssessedLeads.filter(l => l.lead_qualifications[0].category === 'Warm').sort((a,b) => b.lead_qualifications[0].score - a.lead_qualifications[0].score)
-  const coldLeads = filteredAndAssessedLeads.filter(l => l.lead_qualifications[0].category === 'Cold').sort((a,b) => b.lead_qualifications[0].score - a.lead_qualifications[0].score)
+  const hotLeads = filteredAndAssessedLeads.filter(l => l.lead_qualifications[0]?.category === 'Hot').sort((a,b) => (b.lead_qualifications[0]?.score || 0) - (a.lead_qualifications[0]?.score || 0))
+  const warmLeads = filteredAndAssessedLeads.filter(l => l.lead_qualifications[0]?.category === 'Warm').sort((a,b) => (b.lead_qualifications[0]?.score || 0) - (a.lead_qualifications[0]?.score || 0))
+  const coldLeads = filteredAndAssessedLeads.filter(l => l.lead_qualifications[0]?.category === 'Cold').sort((a,b) => (b.lead_qualifications[0]?.score || 0) - (a.lead_qualifications[0]?.score || 0))
 
   const LeadCard = ({ lead, type }) => {
     const qual = lead.lead_qualifications[0]

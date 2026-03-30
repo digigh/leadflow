@@ -309,6 +309,10 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
     }
 
     return s1 && s2 && s3 && s4 && s5 && sDate
+  }).sort((a, b) => {
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db = b.date ? new Date(b.date).getTime() : 0;
+    return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
   })
 
   // Pagination Logic
@@ -931,10 +935,15 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                       {/* Date */}
                       {isColVisible('date') && (
                         <td className="px-4 py-3 text-xs text-[#9AA5B1] whitespace-nowrap">
-                          {lead.date ? new Date(lead.date).toLocaleString('en-US', {
-                            year: 'numeric', month: 'short', day: 'numeric',
-                            hour: 'numeric', minute: '2-digit', hour12: true
-                          }) : '—'}
+                          {lead.date ? (() => {
+                            const d = new Date(lead.date)
+                            return isNaN(d) ? '—' : (
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-[#2F3542]">{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                <span className="text-[10px]">{d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                              </div>
+                            )
+                          })() : '—'}
                         </td>
                       )}
                       
