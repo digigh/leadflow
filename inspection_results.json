@@ -1,0 +1,813 @@
+{
+  "Sheet1": {
+    "cols": [
+      {
+        "index": 0,
+        "label": "Name"
+      },
+      {
+        "index": 1,
+        "label": "Organization Name"
+      },
+      {
+        "index": 2,
+        "label": "Email"
+      },
+      {
+        "index": 3,
+        "label": "Phone Number"
+      },
+      {
+        "index": 4,
+        "label": "Message Content"
+      },
+      {
+        "index": 5,
+        "label": "Date Time"
+      }
+    ],
+    "firstRows": [
+      [
+        "abc",
+        "abc",
+        "abc@gmail.com",
+        12345678990,
+        "abcdefghewrtyu",
+        "2025-12-02T09:15:24.022Z"
+      ],
+      [
+        "GAMIT PRABHATKUMAR PANJIBHAI",
+        "SD TECH ",
+        "prabhatgamit24@gmail.com",
+        9327741678,
+        "I m interested ",
+        "2025-12-03T06:08:25.630Z"
+      ],
+      [
+        "ankush",
+        "digicides",
+        "aspirex99@gnail.com",
+        6395687260,
+        "Testing WhatsApp Trigger",
+        "2025-12-03T19:44:03.393Z"
+      ]
+    ]
+  },
+  "Meta Lead Subsheet": {
+    "cols": [
+      {
+        "index": 0,
+        "label": "Name"
+      },
+      {
+        "index": 1,
+        "label": "Organization Name"
+      },
+      {
+        "index": 2,
+        "label": "Email"
+      },
+      {
+        "index": 3,
+        "label": "Phone Number"
+      },
+      {
+        "index": 4,
+        "label": "Message Content"
+      },
+      {
+        "index": 5,
+        "label": "Date Time"
+      }
+    ],
+    "firstRows": [
+      [
+        "abc",
+        "abc",
+        "abc@gmail.com",
+        12345678990,
+        "abcdefghewrtyu",
+        "2025-12-02T09:15:24.022Z"
+      ],
+      [
+        "GAMIT PRABHATKUMAR PANJIBHAI",
+        "SD TECH ",
+        "prabhatgamit24@gmail.com",
+        9327741678,
+        "I m interested ",
+        "2025-12-03T06:08:25.630Z"
+      ],
+      [
+        "ankush",
+        "digicides",
+        "aspirex99@gnail.com",
+        6395687260,
+        "Testing WhatsApp Trigger",
+        "2025-12-03T19:44:03.393Z"
+      ]
+    ]
+  },
+  "Landing Page 2": {
+    "cols": [
+      {
+        "index": 0,
+        "label": "First Name"
+      },
+      {
+        "index": 1,
+        "label": "Last Name"
+      },
+      {
+        "index": 2,
+        "label": "Email"
+      },
+      {
+        "index": 3,
+        "label": "Phone Number"
+      },
+      {
+        "index": 4,
+        "label": "Company"
+      },
+      {
+        "index": 5,
+        "label": "Job Title"
+      },
+      {
+        "index": 6,
+        "label": "Message"
+      },
+      {
+        "index": 7,
+        "label": "Source"
+      },
+      {
+        "index": 8,
+        "label": "Date and Time"
+      }
+    ],
+    "firstRows": [
+      [
+        "Ankush",
+        "Kumar",
+        "ankush.kumar@digicides.com",
+        7895776124,
+        "DIGICIDES",
+        "Data Analyst",
+        "Hi Hello How are You",
+        "Landing Page 2",
+        "2026-03-12T09:56:43.878Z"
+      ],
+      [
+        "Ankush",
+        "Kumar",
+        "dsankush.kumar@gmail.com",
+        7884901242,
+        "ABC",
+        "XYZ",
+        "HELLO",
+        "Landing Page 2",
+        "2026-03-12T11:12:23.759Z"
+      ],
+      [
+        "rupesh",
+        "kothari",
+        "ishaninvestments@gmail.com",
+        919423526449,
+        "Parshva global",
+        "Director ",
+        "We innovate in banana seedlings ",
+        "Landing Page 2",
+        "2026-03-13T17:52:01.981Z"
+      ]
+    ]
+  },
+  "New Meta Leads March": {
+    "cols": [
+      {
+        "index": 0,
+        "label": ""
+      },
+      {
+        "index": 1,
+        "label": ""
+      },
+      {
+        "index": 2,
+        "label": ""
+      },
+      {
+        "index": 3,
+        "label": ""
+      },
+      {
+        "index": 4,
+        "label": ""
+      },
+      {
+        "index": 5,
+        "label": ""
+      },
+      {
+        "index": 6,
+        "label": ""
+      },
+      {
+        "index": 7,
+        "label": ""
+      },
+      {
+        "index": 8,
+        "label": ""
+      },
+      {
+        "index": 9,
+        "label": ""
+      },
+      {
+        "index": 10,
+        "label": ""
+      },
+      {
+        "index": 11,
+        "label": ""
+      },
+      {
+        "index": 12,
+        "label": ""
+      },
+      {
+        "index": 13,
+        "label": ""
+      },
+      {
+        "index": 14,
+        "label": ""
+      },
+      {
+        "index": 15,
+        "label": ""
+      },
+      {
+        "index": 16,
+        "label": ""
+      },
+      {
+        "index": 17,
+        "label": ""
+      },
+      {
+        "index": 18,
+        "label": ""
+      },
+      {
+        "index": 19,
+        "label": ""
+      },
+      {
+        "index": 20,
+        "label": ""
+      },
+      {
+        "index": 21,
+        "label": ""
+      },
+      {
+        "index": 22,
+        "label": ""
+      },
+      {
+        "index": 23,
+        "label": ""
+      },
+      {
+        "index": 24,
+        "label": ""
+      },
+      {
+        "index": 25,
+        "label": ""
+      },
+      {
+        "index": 26,
+        "label": ""
+      },
+      {
+        "index": 27,
+        "label": ""
+      },
+      {
+        "index": 28,
+        "label": ""
+      },
+      {
+        "index": 29,
+        "label": ""
+      },
+      {
+        "index": 30,
+        "label": ""
+      },
+      {
+        "index": 31,
+        "label": ""
+      },
+      {
+        "index": 32,
+        "label": ""
+      },
+      {
+        "index": 33,
+        "label": ""
+      },
+      {
+        "index": 34,
+        "label": ""
+      },
+      {
+        "index": 35,
+        "label": ""
+      },
+      {
+        "index": 36,
+        "label": ""
+      },
+      {
+        "index": 37,
+        "label": ""
+      },
+      {
+        "index": 38,
+        "label": ""
+      },
+      {
+        "index": 39,
+        "label": ""
+      },
+      {
+        "index": 40,
+        "label": ""
+      },
+      {
+        "index": 41,
+        "label": ""
+      },
+      {
+        "index": 42,
+        "label": ""
+      },
+      {
+        "index": 43,
+        "label": ""
+      },
+      {
+        "index": 44,
+        "label": ""
+      },
+      {
+        "index": 45,
+        "label": ""
+      },
+      {
+        "index": 46,
+        "label": ""
+      },
+      {
+        "index": 47,
+        "label": ""
+      },
+      {
+        "index": 48,
+        "label": ""
+      },
+      {
+        "index": 49,
+        "label": ""
+      },
+      {
+        "index": 50,
+        "label": ""
+      },
+      {
+        "index": 51,
+        "label": ""
+      },
+      {
+        "index": 52,
+        "label": ""
+      },
+      {
+        "index": 53,
+        "label": ""
+      },
+      {
+        "index": 54,
+        "label": ""
+      },
+      {
+        "index": 55,
+        "label": ""
+      },
+      {
+        "index": 56,
+        "label": ""
+      },
+      {
+        "index": 57,
+        "label": ""
+      },
+      {
+        "index": 58,
+        "label": ""
+      },
+      {
+        "index": 59,
+        "label": ""
+      },
+      {
+        "index": 60,
+        "label": ""
+      },
+      {
+        "index": 61,
+        "label": ""
+      },
+      {
+        "index": 62,
+        "label": ""
+      },
+      {
+        "index": 63,
+        "label": ""
+      },
+      {
+        "index": 64,
+        "label": ""
+      },
+      {
+        "index": 65,
+        "label": ""
+      },
+      {
+        "index": 66,
+        "label": ""
+      },
+      {
+        "index": 67,
+        "label": ""
+      },
+      {
+        "index": 68,
+        "label": ""
+      },
+      {
+        "index": 69,
+        "label": ""
+      },
+      {
+        "index": 70,
+        "label": ""
+      },
+      {
+        "index": 71,
+        "label": ""
+      },
+      {
+        "index": 72,
+        "label": ""
+      },
+      {
+        "index": 73,
+        "label": ""
+      },
+      {
+        "index": 74,
+        "label": ""
+      },
+      {
+        "index": 75,
+        "label": ""
+      },
+      {
+        "index": 76,
+        "label": ""
+      },
+      {
+        "index": 77,
+        "label": ""
+      },
+      {
+        "index": 78,
+        "label": ""
+      },
+      {
+        "index": 79,
+        "label": ""
+      },
+      {
+        "index": 80,
+        "label": ""
+      },
+      {
+        "index": 81,
+        "label": ""
+      },
+      {
+        "index": 82,
+        "label": ""
+      },
+      {
+        "index": 83,
+        "label": ""
+      },
+      {
+        "index": 84,
+        "label": ""
+      },
+      {
+        "index": 85,
+        "label": ""
+      },
+      {
+        "index": 86,
+        "label": ""
+      },
+      {
+        "index": 87,
+        "label": ""
+      }
+    ],
+    "firstRows": [
+      [
+        "l:1298032762241879",
+        "2026-04-03T21:47:25-05:00",
+        "ag:120241652632930097",
+        "Agri Client leads 3.0",
+        "as:120241652632950097",
+        "Agri Client leads 3.0",
+        "c:120230296203170097",
+        "Client Lead Campaigns",
+        "f:2154223995400162",
+        "Mar'26-copy",
+        "false",
+        "ig",
+        "fertilizer_company",
+        "boost_product_sales",
+        "Arc Bio Khaad",
+        "p:+919877717992",
+        "arcbiokhaad@gmail.com",
+        "Arc Bio Fuel - The Green Project",
+        "Director",
+        "http://www.arcbiofuel.com/",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "CREATED",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      [
+        "l:4432379107086190",
+        "2026-04-02T13:45:14-05:00",
+        "ag:120241652632930097",
+        "Agri Client leads 3.0",
+        "as:120241652632950097",
+        "Agri Client leads 3.0",
+        "c:120230296203170097",
+        "Client Lead Campaigns",
+        "f:2154223995400162",
+        "Mar'26-copy",
+        "false",
+        "ig",
+        "distributor_/_retailer",
+        "farmer_engagement",
+        "Harshit",
+        "p:+919993650500",
+        "Pkskcg@gmail.com",
+        "Pragati krishi kendra",
+        "Businessman",
+        "na.com",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "CREATED",
+        "id",
+        "created_time",
+        "ad_id",
+        "ad_name",
+        "adset_id",
+        "adset_name",
+        "campaign_id",
+        "campaign_name",
+        "form_id",
+        "form_name",
+        "is_organic",
+        "platform",
+        "which_best_describes_your_business?",
+        "what_are_you_looking_for?",
+        "full_name",
+        "phone",
+        "email",
+        "company_name",
+        "job_title",
+        "website",
+        "lead_status"
+      ],
+      [
+        "l:1978697446366116",
+        "2026-04-01T11:17:34-05:00",
+        "ag:120241652632930097",
+        "Agri Client leads 3.0",
+        "as:120241652632950097",
+        "Agri Client leads 3.0",
+        "c:120230296203170097",
+        "Loyalty Program",
+        "f:2154223995400162",
+        "Mar'26-copy",
+        "false",
+        "ig",
+        "seed_company",
+        "boost_product_sales",
+        "Anshul Chugh",
+        "p:+919997911141",
+        "Anshulchugh60@yahoo.in",
+        "Krishna Beej Bhandar",
+        "Partner",
+        "na.in",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "CREATED",
+        "id",
+        "created_time",
+        "ad_id",
+        "ad_name",
+        "adset_id",
+        "adset_name",
+        "campaign_id",
+        "campaign_name",
+        "form_id",
+        "form_name",
+        "is_organic",
+        "platform",
+        "which_best_describes_your_business?",
+        "what_are_you_looking_for?",
+        "full_name",
+        "phone",
+        "email",
+        "company_name",
+        "job_title",
+        "website",
+        "lead_status",
+        ""
+      ]
+    ]
+  }
+}
