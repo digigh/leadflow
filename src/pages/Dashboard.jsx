@@ -579,9 +579,9 @@ export default function Dashboard({ onLogout }) {
           {activeTab === 'leads' ? (
             <LeadsTab leads={leads} setLeads={setLeads} loading={loading} dbReady={dbReady} onSync={handleSync} darkMode={darkMode} newLeadIds={newLeadIds} settings={settings} onAddNotification={handleAddNotification} />
           ) : activeTab === 'qualification' ? (
-            <LeadQualificationTab leads={leads} setLeads={setLeads} darkMode={darkMode} />
+            <LeadQualificationTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} onAddNotification={handleAddNotification} />
           ) : activeTab === 'classification' ? (
-            <LeadClassificationTab leads={leads} darkMode={darkMode} />
+            <LeadClassificationTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} onAddNotification={handleAddNotification} />
           ) : activeTab === 'followups' ? (
             <FollowUpsTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} onAddNotification={handleAddNotification} />
           ) : activeTab === 'import' ? (
