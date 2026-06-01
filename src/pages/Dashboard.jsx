@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Target, Users, BarChart2, LogOut, Menu, Moon, Sun, Bell, X, RefreshCw, Sparkles, CalendarClock, Settings, CalendarCheck, Upload, ClipboardList, Layers } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { MOCK_LEADS } from '../lib/constants'
-import { syncGoogleSheets } from '../lib/sheets'
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from '../lib/settings'
 import LeadsTab from './LeadsTab'
 import AnalyticsTab from './AnalyticsTab'
@@ -116,14 +115,12 @@ export default function Dashboard({ onLogout }) {
       setLoading(true)
       setPolling(true)
       try {
-        await syncGoogleSheets()
-      } catch (err) {
-        console.error('Initial auto-sync failed:', err)
-      }
-      if (mounted) setPolling(false)
-      
-      if (mounted) {
         await loadLeads({ silent: true })
+      } catch (err) {
+        console.error('Initial load failed:', err)
+      }
+      if (mounted) {
+        setPolling(false)
         setLoading(false)
       }
     }
@@ -135,7 +132,6 @@ export default function Dashboard({ onLogout }) {
     const timer = setInterval(async () => {
       setPolling(true)
       try {
-        await syncGoogleSheets()
         await loadLeads({ trackNew: true, silent: true })
       } catch { }
       setPolling(false)
@@ -145,9 +141,22 @@ export default function Dashboard({ onLogout }) {
 
   const handleSync = async () => {
     try {
-      const result = await syncGoogleSheets()
-      await loadLeads({ trackNew: true })
-      return { success: true, count: result.count }
+      const oldIds = new Set(leads.map(l => l.id))
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*, lead_qualifications(*)')
+        .order('date', { ascending: false })
+
+      if (error) throw error
+
+      if (data) {
+        const validData = data.filter(l => l.status !== '--Delete--')
+        const newCount = validData.filter(l => !oldIds.has(l.id)).length
+        setLeads(validData)
+        setDbReady(true)
+        return { success: true, count: newCount }
+      }
+      return { success: true, count: 0 }
     } catch (err) {
       console.error(err)
       throw err
@@ -258,7 +267,7 @@ export default function Dashboard({ onLogout }) {
           <div className="flex items-center gap-3">
             <div className={`flex items-center gap-1.5 px-3 py-1.5 ${dbReady ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'} rounded-lg text-xs font-semibold`}>
               <span className={`w-1.5 h-1.5 ${dbReady ? 'bg-green-500' : 'bg-yellow-500'} rounded-full ${polling ? 'animate-ping' : 'animate-pulse'}`} />
-              {polling ? 'Syncing…' : dbReady ? 'DB Connected' : 'Demo Mode'}
+              {polling ? 'Refreshing…' : dbReady ? 'DB Connected' : 'Demo Mode'}
             </div>
             <div className="relative" ref={bellRef}>
               <button onClick={() => setBellOpen(o => !o)} className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-colors ${darkMode ? 'bg-[#2A2F3E] text-[#8892A4] hover:text-[#E2E8F0]' : 'bg-[#F4F6F9] text-[#6B778C] hover:bg-[#E6EBF2]'}`} title="Notifications">
@@ -282,7 +291,7 @@ export default function Dashboard({ onLogout }) {
                         <div key={n.id} className={`px-4 py-3 border-b ${t.border} ${t.dropdownItem} transition-colors`}>
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className={`text-xs font-bold ${t.text}`}>🟢 {n.count} new lead{n.count > 1 ? 's' : ''} synced</p>
+                              <p className={`text-xs font-bold ${t.text}`}>🟢 {n.count} new lead{n.count > 1 ? 's' : ''} loaded</p>
                               {n.leads.slice(0, 2).map(l => <p key={l.id} className={`text-xs ${t.subtext} mt-0.5`}>· {l.lead_name || '—'} ({l.source || '—'})</p>)}
                               {n.leads.length > 2 && <p className={`text-xs ${t.subtext} opacity-60`}>+{n.leads.length - 2} more</p>}
                             </div>
@@ -292,7 +301,7 @@ export default function Dashboard({ onLogout }) {
                       ))
                     )}
                   </div>
-                  <div className={`px-4 py-2 border-t ${t.border} flex items-center gap-1 ${t.subtext} text-[10px]`}><RefreshCw size={10} className={polling ? 'animate-spin' : ''} />Auto-syncs every 5 min</div>
+                  <div className={`px-4 py-2 border-t ${t.border} flex items-center gap-1 ${t.subtext} text-[10px]`}><RefreshCw size={10} className={polling ? 'animate-spin' : ''} />Auto-refreshes every 5 min</div>
                 </div>
               )}
             </div>

@@ -1,3 +1,6 @@
+// ── Source names (must match SHEET_SOURCES in sheets.js) ────────────────────
+export const SOURCE_OPTIONS = ['Website', 'Meta', 'Landing Page 2', 'New Meta Leads March']
+
 // ── Status options ──────────────────────────────────────────────────────────
 export const STATUS_OPTIONS = [
   'New',

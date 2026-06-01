@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, Fragment, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
-import { MOCK_LEADS, STATUS_OPTIONS, PRIORITY_OPTIONS, ASSIGNED_OPTIONS } from '../lib/constants'
+import { MOCK_LEADS, STATUS_OPTIONS, PRIORITY_OPTIONS, ASSIGNED_OPTIONS, SOURCE_OPTIONS } from '../lib/constants'
 import { StatusBadge, PriorityBadge, MetricCard, Toast, ElegantDateTimeInput, formatToLocalDatetime, toISODatetime } from '../components/UI'
 import {
   Users, CheckCircle, Star, Clock, Search, RefreshCw,
@@ -8,7 +8,6 @@ import {
   ChevronLeft, ChevronRight, Calendar, Plus, MessageSquare
 } from 'lucide-react'
 
-import { syncGoogleSheets } from '../lib/sheets'
 import { DEFAULT_COLUMNS } from '../lib/settings'
 
 export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, darkMode, newLeadIds = new Set(), settings = {} }) {
@@ -27,8 +26,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   // Dynamic source filter — derived from actual lead data (incl. any custom sources from imports)
   const availableSources = useMemo(() => {
     const fromLeads = [...new Set((leads || []).map(l => l.source).filter(Boolean))]
-    const base = ['Website', 'Meta', 'Landing Page 2']
-    return [...new Set([...base, ...fromLeads])].sort()
+    return [...new Set([...SOURCE_OPTIONS, ...fromLeads])].sort()
   }, [leads])
 
   const baseCols = DEFAULT_COLUMNS.filter(c => c.key !== 'actions')
@@ -273,10 +271,10 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
     setSyncing(true)
     try {
       const result = await onSync()
-      showToast(`Synced with Google Sheets ✓ (${result.count} new)`)
+      showToast(`Leads refreshed from database ✓ (${result.count} new loaded)`)
     } catch (err) {
       console.error(err)
-      showToast('Sync failed', 'error')
+      showToast('Refresh failed', 'error')
     }
     setSyncing(false)
   }
@@ -825,9 +823,11 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
           )}
 
           <button onClick={handleSyncButton}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-[#2F6BFF] text-white font-bold rounded-lg hover:bg-[#1A4FCC] transition-colors ml-auto">
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-[#2F6BFF] text-white font-bold rounded-lg hover:bg-[#1A4FCC] transition-colors ml-auto"
+            title="Refresh lead list directly from database"
+          >
             <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
-            {syncing ? 'Syncing...' : 'Sync Sheets'}
+            {syncing ? 'Refreshing...' : 'Refresh Leads'}
           </button>
           <button
             onClick={() => { setAddForm(emptyAddForm()); setAddModalOpen(true) }}
