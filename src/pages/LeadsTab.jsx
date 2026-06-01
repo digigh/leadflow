@@ -10,7 +10,7 @@ import {
 
 import { DEFAULT_COLUMNS } from '../lib/settings'
 
-export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, darkMode, newLeadIds = new Set(), settings = {} }) {
+export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, darkMode, newLeadIds = new Set(), settings = {}, onAddNotification }) {
   const statusOpts = settings.statusOptions || STATUS_OPTIONS
   const priorityOpts = settings.priorityOptions || PRIORITY_OPTIONS
   
@@ -21,6 +21,33 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   }, [settings.assignedOptions, leads])
 
   const colVis = settings.columnVisibility || Object.fromEntries(DEFAULT_COLUMNS.map(c => [c.key, true]))
+
+  // ── Theme configuration ──
+  const t = darkMode ? {
+    bg: 'bg-[#161B27]',
+    card: 'bg-[#1A2035] border-[#2A2F3E] text-[#E2E8F0]',
+    text: 'text-[#E2E8F0]',
+    subtext: 'text-[#8892A4]',
+    border: 'border-[#2A2F3E]',
+    input: 'bg-[#1E2436] border-[#2A2F3E] text-[#E2E8F0] focus:border-[#2F6BFF] placeholder-[#4A5568]',
+    rowHover: 'hover:bg-[#1E2540]',
+    tag: 'bg-[#2A2F3E] text-[#8892A4]',
+    th: 'bg-[#1E2436] text-[#8892A4]',
+    divider: 'border-[#2A2F3E]',
+    modalBg: 'bg-[#1A2035]',
+  } : {
+    bg: 'bg-white',
+    card: 'bg-white border-[#E6EBF2] text-[#2F3542]',
+    text: 'text-[#2F3542]',
+    subtext: 'text-[#6B778C]',
+    border: 'border-[#E6EBF2]',
+    input: 'bg-white border-[#E6EBF2] text-[#2F3542] focus:border-[#2F6BFF] placeholder-[#9AA5B1]',
+    rowHover: 'hover:bg-[#F9FBFF]',
+    tag: 'bg-[#F4F6F9] text-[#6B778C]',
+    th: 'bg-[#F8FAFC] text-[#6B778C]',
+    divider: 'border-[#EEF2F7]',
+    modalBg: 'bg-white',
+  }
   const customCols = settings.customColumns || []
 
   // Dynamic source filter — derived from actual lead data (incl. any custom sources from imports)
@@ -34,6 +61,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   const visibleColumns = [...baseCols, ...customCols, actionCol].filter(c => colVis[c.key] !== false)
   const isColVisible = (key) => visibleColumns.some(c => c.key === key)
   const [search, setSearch] = useState('')
+  const [quickFilter, setQuickFilter] = useState('all')
   const [sourceFilter, setSourceFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [priorityFilter, setPriorityFilter] = useState('All')
@@ -113,6 +141,13 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       const newLead = { ...payload, id: Date.now() }
       setLeads(prev => [newLead, ...prev])
       setSuccessLead(newLead.lead_name)
+      if (onAddNotification) {
+        onAddNotification({
+          title: 'Manual Lead Added',
+          message: `Lead "${payload.lead_name}" added locally (Demo Mode).`,
+          tab: 'leads'
+        })
+      }
     }
     setAddForm(emptyAddForm())
     setAddCustomSource('')
@@ -183,11 +218,20 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
         const retry = await supabase.from('leads').update(corePayload).eq('id', id)
         error = retry.error
         if (!error) {
+          let qError = null
           try {
             const qRes = await supabase.from('lead_qualifications').upsert(qualPayload, { onConflict: 'lead_id' }).select().single()
+            if (qRes.error) qError = qRes.error
             if (qRes.data) newQual = qRes.data
-          } catch(e) {}
-          showToast('Saved ✓  (run migration SQL to enable Follow-up field)', 'warning')
+          } catch(e) {
+            qError = e
+          }
+          if (qError) {
+            console.error('Lead qualifications upsert error:', qError)
+            showToast('Saved ✓  (but Lead Scoring failed - run migration SQL to add missing columns)', 'warning')
+          } else {
+            showToast('Saved ✓  (run migration SQL to enable Follow-up field)', 'warning')
+          }
           setLeads(prev => prev.map(l => l.id === id ? { ...l, ...corePayload, lead_qualifications: newQual ? [newQual] : l.lead_qualifications } : l))
           setEditingId(null)
           setSaving(false)
@@ -203,15 +247,38 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
       }
 
       // Upsert qualifications
+      let qError = null
       try {
         const qRes = await supabase.from('lead_qualifications').upsert(qualPayload, { onConflict: 'lead_id' }).select().single()
+        if (qRes.error) qError = qRes.error
         if (qRes.data) newQual = qRes.data
-      } catch(e) {}
+      } catch(e) {
+        qError = e
+      }
 
-      showToast('Saved to Cloud DB ✓')
+      if (qError) {
+        console.error('Lead qualifications upsert error:', qError)
+        showToast('Lead saved, but scoring failed. Run SQL migration to add missing columns!', 'error')
+      } else {
+        showToast('Saved to Cloud DB ✓')
+      }
     } else {
       showToast('Saved locally (DB not connected yet)', 'error')
       newQual = qualPayload
+      if (onAddNotification) {
+        onAddNotification({
+          title: 'Lead Updated Locally',
+          message: `CRM details for "${leadTarget?.lead_name || 'Lead'}" updated locally.`,
+          tab: 'leads'
+        })
+        if (newQual && newQual.score !== undefined) {
+          onAddNotification({
+            title: 'Lead Scored Locally',
+            message: `"${leadTarget?.lead_name || 'Lead'}" qualified as "${category}" (${score} pts) locally.`,
+            tab: 'classification'
+          })
+        }
+      }
     }
 
     setLeads(prev => prev.map(l => l.id === id ? { ...l, ...fullPayload, lead_qualifications: newQual ? [newQual] : l.lead_qualifications } : l))
@@ -280,38 +347,93 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
   }
 
 
-  // ── Filter leads ───────────────────────────────────────────────────────────
-  const filtered = leads.filter(l => {
-    const q = search.toLowerCase()
-
-    const s1 = (!q || [l.lead_name, l.company, l.email, l.phone].some(v => v?.toLowerCase().includes(q)))
-    const s2 = (sourceFilter === 'All' || l.source === sourceFilter)
-    const s3 = (statusFilter === 'All' || l.status === statusFilter)
-    const s4 = (priorityFilter === 'All' || l.priority === priorityFilter || (priorityFilter === 'Unassigned' && !l.priority))
-    const s5 = (assignedFilter === 'All' || l.assigned_to === assignedFilter || (assignedFilter === 'Unassigned' && !l.assigned_to))
-
-    let sDate = true;
-    if (l.date && dateType !== 'All Time') {
-      const d = new Date(l.date);
-      if (dateType === 'Custom Range') {
-        if (dateFrom) sDate = sDate && d >= new Date(dateFrom);
-        if (dateTo) {
-          const toD = new Date(dateTo);
-          toD.setHours(23, 59, 59, 999);
-          sDate = sDate && d <= toD;
-        }
-      } else if (dateType === 'Month/Year') {
-        if (yearFilter) sDate = sDate && d.getFullYear().toString() === yearFilter;
-        if (monthFilter) sDate = sDate && (d.getMonth() + 1).toString().padStart(2, '0') === monthFilter;
-      }
+  // ── Helpers for Sparklines ──────────────────────────────────────────────────
+  const getSparklinePoints = (leadsList, defaultValue = [10, 15, 8, 20, 12]) => {
+    if (!leadsList || leadsList.length === 0) return defaultValue;
+    const sorted = [...leadsList]
+      .map(l => l.date ? new Date(l.date).getTime() : 0)
+      .filter(t => t > 0)
+      .sort((a, b) => a - b);
+    
+    if (sorted.length < 5) {
+      const count = leadsList.length;
+      return [Math.floor(count * 0.4), Math.floor(count * 0.6), Math.floor(count * 0.5), Math.floor(count * 0.8), count];
     }
+    
+    const bucketSize = Math.max(1, Math.floor(sorted.length / 5));
+    const buckets = [0, 0, 0, 0, 0];
+    for (let i = 0; i < sorted.length; i++) {
+      const bucketIdx = Math.min(4, Math.floor(i / bucketSize));
+      buckets[bucketIdx]++;
+    }
+    return buckets;
+  };
 
-    return s1 && s2 && s3 && s4 && s5 && sDate
-  }).sort((a, b) => {
-    const da = a.date ? new Date(a.date).getTime() : 0;
-    const db = b.date ? new Date(b.date).getTime() : 0;
-    return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
-  })
+  const renderSparklinePath = (values, width = 140, height = 40) => {
+    const max = Math.max(...values, 1);
+    const min = Math.min(...values, 0);
+    const range = max - min || 1;
+    
+    const points = values.map((val, idx) => {
+      const x = (idx / (values.length - 1)) * width;
+      const y = height - 4 - ((val - min) / range) * (height - 8);
+      return `${x},${y}`;
+    });
+    
+    const linePath = `M ${points.map(p => p.split(',').join(' ')).join(' L ')}`;
+    const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+    
+    return { linePath, areaPath, lastX: width, lastY: parseFloat(points[points.length - 1]?.split(',')[1] || height / 2) };
+  };
+
+  // ── Filter leads ───────────────────────────────────────────────────────────
+  const baseFiltered = useMemo(() => {
+    return leads.filter(l => {
+      const q = search.toLowerCase()
+
+      const s1 = (!q || [l.lead_name, l.company, l.email, l.phone].some(v => v?.toLowerCase().includes(q)))
+      const s2 = (sourceFilter === 'All' || l.source === sourceFilter)
+      const s3 = (statusFilter === 'All' || l.status === statusFilter)
+      const s4 = (priorityFilter === 'All' || l.priority === priorityFilter || (priorityFilter === 'Unassigned' && !l.priority))
+      const s5 = (assignedFilter === 'All' || l.assigned_to === assignedFilter || (assignedFilter === 'Unassigned' && !l.assigned_to))
+
+      let sDate = true;
+      if (l.date && dateType !== 'All Time') {
+        const d = new Date(l.date);
+        if (dateType === 'Custom Range') {
+          if (dateFrom) sDate = sDate && d >= new Date(dateFrom);
+          if (dateTo) {
+            const toD = new Date(dateTo);
+            toD.setHours(23, 59, 59, 999);
+            sDate = sDate && d <= toD;
+          }
+        } else if (dateType === 'Month/Year') {
+          if (yearFilter) sDate = sDate && d.getFullYear().toString() === yearFilter;
+          if (monthFilter) sDate = sDate && (d.getMonth() + 1).toString().padStart(2, '0') === monthFilter;
+        }
+      }
+
+      return s1 && s2 && s3 && s4 && s5 && sDate
+    });
+  }, [leads, search, sourceFilter, statusFilter, priorityFilter, assignedFilter, dateType, dateFrom, dateTo, monthFilter, yearFilter]);
+
+  // Apply quick filter on top of base filtered leads
+  const filtered = useMemo(() => {
+    return baseFiltered.filter(l => {
+      if (quickFilter === 'needsAction') {
+        return !l.status || l.status === 'New'
+      } else if (quickFilter === 'qualified') {
+        return l.lead_qualifications && l.lead_qualifications.length > 0
+      } else if (quickFilter === 'followUp') {
+        return l.status === 'Follow Up' || !!l.follow_up_at
+      }
+      return true;
+    }).sort((a, b) => {
+      const da = a.date ? new Date(a.date).getTime() : 0;
+      const db = b.date ? new Date(b.date).getTime() : 0;
+      return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
+    });
+  }, [baseFiltered, quickFilter]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -322,18 +444,26 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
     if (currentPage > totalPages && totalPages > 0) setCurrentPage(1);
   }, [filtered.length, currentPage, totalPages])
 
-  const stats = {
-    total: filtered.length,
-    needsAction: filtered.filter(l => !l.status || l.status === 'New').length,
-    interested: filtered.filter(l => l.status === 'Interested').length,
-    followUp: filtered.filter(l => l.status === 'Follow Up' || !!l.follow_up_at).length,
-    converted: filtered.filter(l => l.status === 'Converted').length,
-    qualified: filtered.filter(l => l.lead_qualifications && l.lead_qualifications.length > 0).length,
-    hot: filtered.filter(l => l.lead_qualifications && l.lead_qualifications[0]?.category === 'Hot').length,
-  }
+  const stats = useMemo(() => {
+    const rawTotalList = baseFiltered;
+    const rawActionList = baseFiltered.filter(l => !l.status || l.status === 'New');
+    const rawQualList = baseFiltered.filter(l => l.lead_qualifications && l.lead_qualifications.length > 0);
+    const rawFollowList = baseFiltered.filter(l => l.status === 'Follow Up' || !!l.follow_up_at);
+
+    return {
+      total: rawTotalList.length,
+      totalPoints: getSparklinePoints(rawTotalList),
+      needsAction: rawActionList.length,
+      needsActionPoints: getSparklinePoints(rawActionList),
+      qualified: rawQualList.length,
+      qualifiedPoints: getSparklinePoints(rawQualList),
+      followUp: rawFollowList.length,
+      followUpPoints: getSparklinePoints(rawFollowList),
+    };
+  }, [baseFiltered]);
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col overflow-hidden space-y-5" style={{ height: 'calc(100vh - 112px)' }}>
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* ── Edit Lead Modal ─────────────────────────────────────────────── */}
@@ -732,62 +862,189 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
         </div>
       )}
 
-      {/* DB warning */}
-      {!dbReady && (
-        <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm">
-          <AlertTriangle size={17} className="text-amber-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="font-bold text-amber-700">Database not connected — showing demo data</p>
-            <p className="text-amber-600 text-xs mt-0.5">Run the SQL schema in your database SQL Editor to enable real persistence.</p>
-          </div>
-        </div>
-      )}
 
-      {/* Metrics — reactive to current filters */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard icon={Users} label="Leads in View" value={stats.total} color="#2F6BFF" />
-        <MetricCard icon={Clock} label="Needs Action" value={stats.needsAction} color="#F5A623" />
-        <MetricCard icon={Star} label="Qualified" value={stats.qualified} color="#7B3FFF" />
-        <MetricCard icon={CheckCircle} label="Follow-ups Scheduled" value={stats.followUp} color="#2ECC71" />
-      </div>
+      {/* Premium Interactive Metric Cards Panel */}
+      {(() => {
+        const cardData = [
+          {
+            id: 'all',
+            label: 'Leads in View',
+            value: stats.total,
+            points: stats.totalPoints,
+            color: '#2F6BFF',
+            icon: Users,
+            desc: 'Total filtered list',
+          },
+          {
+            id: 'needsAction',
+            label: 'Needs Action',
+            value: stats.needsAction,
+            points: stats.needsActionPoints,
+            color: '#F5A623',
+            icon: Clock,
+            desc: 'New leads pending review',
+          },
+          {
+            id: 'qualified',
+            label: 'Qualified',
+            value: stats.qualified,
+            points: stats.qualifiedPoints,
+            color: '#7B3FFF',
+            icon: Star,
+            desc: 'Scored & assessed leads',
+          },
+          {
+            id: 'followUp',
+            label: 'Follow-ups Scheduled',
+            value: stats.followUp,
+            points: stats.followUpPoints,
+            color: '#2ECC71',
+            icon: CheckCircle,
+            desc: 'Scheduled sales follow-ups',
+          },
+        ];
+
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
+            {cardData.map(c => {
+              const isActive = quickFilter === c.id;
+              const { linePath, areaPath, lastX, lastY } = renderSparklinePath(c.points, 130, 42);
+              const Icon = c.icon;
+              
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setQuickFilter(c.id)}
+                  className={`text-left rounded-2xl border p-5 flex flex-col justify-between transition-all duration-300 relative overflow-hidden group select-none
+                    ${isActive 
+                      ? (darkMode 
+                          ? 'bg-gradient-to-br from-[#1E2540] to-[#0A0D1A] border-[#2F6BFF] shadow-lg shadow-blue-500/10 text-white scale-[1.01]' 
+                          : 'bg-gradient-to-br from-blue-50 to-blue-100/50 border-[#2F6BFF] shadow-md shadow-blue-500/5 text-[#2F3542] scale-[1.01]')
+                      : (darkMode 
+                          ? 'bg-[#1E2035] border-[#2A2F3E] text-[#E2E8F0] hover:border-[#2F6BFF]/40' 
+                          : 'bg-white border-[#E6EBF2] hover:border-[#2F6BFF]/40 hover:shadow-md hover:-translate-y-0.5 text-[#2F3542]')}`}
+                >
+                  {/* Decorative background glow for active card */}
+                  {isActive && (
+                    <div 
+                      className="absolute pointer-events-none rounded-full blur-[40px] opacity-20 -right-8 -top-8 w-24 h-24"
+                      style={{ backgroundColor: c.color }}
+                    />
+                  )}
+                  
+                  {/* Header: Label & Icon */}
+                  <div className="flex items-center justify-between w-full relative z-10">
+                    <span className={`text-[11px] font-bold uppercase tracking-wider ${isActive ? (darkMode ? 'text-[#8892A4]' : 'text-blue-800') : 'text-[#6B778C] dark:text-[#8892A4]'}`}>
+                      {c.label}
+                    </span>
+                    <div 
+                      className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110" 
+                      style={{ backgroundColor: isActive ? `${c.color}25` : `${c.color}12` }}
+                    >
+                      <Icon size={15} style={{ color: c.color }} />
+                    </div>
+                  </div>
+                  
+                  {/* Value & Sparkline Chart */}
+                  <div className="flex items-end justify-between w-full mt-4 relative z-10">
+                    <div className="flex flex-col">
+                      <span className={`text-3xl font-black tracking-tight leading-none transition-all duration-300 ${isActive ? (darkMode ? 'text-white' : 'text-[#2F3542]') : 'text-[#2F3542] dark:text-white'}`}>
+                        {c.value.toLocaleString()}
+                      </span>
+                      <span className={`text-[10px] mt-1 font-semibold ${isActive ? (darkMode ? 'text-[#8892A4]' : 'text-blue-700/80') : 'text-[#9AA5B1]'}`}>
+                        {c.desc}
+                      </span>
+                    </div>
+                    
+                    {/* SVG Mini Sparkline Chart */}
+                    <div className="h-11 w-[130px] shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-full h-full overflow-visible">
+                        <defs>
+                          <linearGradient id={`grad-${c.id}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={c.color} stopOpacity={0.35} />
+                            <stop offset="100%" stopColor={c.color} stopOpacity={0.0} />
+                          </linearGradient>
+                        </defs>
+                        {/* Area under curve */}
+                        <path
+                          d={areaPath}
+                          fill={`url(#grad-${c.id})`}
+                          className="transition-all duration-500"
+                        />
+                        {/* Sparkline stroke path */}
+                        <path
+                          d={linePath}
+                          fill="none"
+                          stroke={c.color}
+                          strokeWidth={2.5}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="transition-all duration-500"
+                        />
+                        {/* Pulsing endpoint indicator dot */}
+                        <circle
+                          cx={lastX}
+                          cy={lastY}
+                          r={3}
+                          fill={c.color}
+                          className="animate-pulse"
+                        />
+                        <circle
+                          cx={lastX}
+                          cy={lastY}
+                          r={6}
+                          fill="none"
+                          stroke={c.color}
+                          strokeWidth={1}
+                          className="animate-ping opacity-60"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-[#E6EBF2] shadow-sm">
+      <div className={`rounded-xl border shadow-sm w-full max-w-full flex-1 flex flex-col min-h-0 ${t.card}`}>
         {/* Toolbar */}
-        <div className="p-4 border-b border-[#E6EBF2] flex flex-wrap items-center gap-3">
+        <div className={`p-4 border-b flex flex-wrap items-center gap-3 ${t.divider}`}>
           <div className="relative flex-1 min-w-44">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA5B1]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search name, email, company, or phone..."
-              className="w-full pl-8 pr-4 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/20 focus:border-[#2F6BFF]"
+              className={`w-full pl-8 pr-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/20 focus:border-[#2F6BFF] ${t.input}`}
             />
           </div>
           <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+            className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
             <option value="All">All Sources</option>
             {availableSources.map(s => <option key={s}>{s}</option>)}
           </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+            className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
             <option value="All">All Status</option>
             {statusOpts.map(s => <option key={s}>{s}</option>)}
           </select>
           <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+            className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
             <option value="All">All Priorities</option>
             {priorityOpts.map(p => <option key={p}>{p}</option>)}
             <option value="Unassigned">Unassigned Priority</option>
           </select>
           <select value={assignedFilter} onChange={e => setAssignedFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+            className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
             <option value="All">All Owners</option>
             {assignedOpts.map(a => <option key={a}>{a}</option>)}
             <option value="Unassigned">Unassigned Owner</option>
           </select>
           <select value={dateType} onChange={e => setDateType(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+            className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
             <option value="All Time">All Time Log</option>
             <option value="Custom Range">Date Range</option>
             <option value="Month/Year">Month/Year</option>
@@ -796,17 +1053,17 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
           {dateType === 'Custom Range' && (
             <div className="flex items-center gap-2">
               <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]" />
-              <span className="text-[#9AA5B1] text-sm">to</span>
+                className={`px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`} />
+              <span className={`${t.subtext} text-sm`}>to</span>
               <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]" />
+                className={`px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`} />
             </div>
           )}
 
           {dateType === 'Month/Year' && (
             <div className="flex items-center gap-2">
               <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)}
-                className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+                className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
                 <option value="">All Months</option>
                 <option value="01">January</option><option value="02">February</option><option value="03">March</option>
                 <option value="04">April</option><option value="05">May</option><option value="06">June</option>
@@ -814,7 +1071,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
                 <option value="10">October</option><option value="11">November</option><option value="12">December</option>
               </select>
               <select value={yearFilter} onChange={e => setYearFilter(e.target.value)}
-                className="px-3 py-2 text-sm border border-[#E6EBF2] rounded-lg focus:outline-none focus:border-[#2F6BFF] text-[#2F3542]">
+                className={`px-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#2F6BFF] ${t.input}`}>
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
@@ -843,12 +1100,12 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
             <p className="text-sm">Loading leads from database...</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-auto flex-1 min-h-0 relative">
+            <table className="w-full min-w-[1500px] text-sm">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7]">
+                <tr className="bg-[#F8FAFC] border-b border-[#EEF2F7] sticky top-0 z-10 shadow-sm">
                   {visibleColumns.map(c => (
-                    <th key={c.key} className="px-4 py-3 text-left text-xs font-semibold text-[#6B778C] whitespace-nowrap">{c.label}</th>
+                    <th key={c.key} className="px-4 py-3 text-left text-xs font-semibold text-[#6B778C] whitespace-nowrap bg-[#F8FAFC]">{c.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -1100,7 +1357,7 @@ export default function LeadsTab({ leads, setLeads, loading, dbReady, onSync, da
           <span>
             Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)}–{Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} leads
             {filtered.length !== leads.length && ` (filtered from ${leads.length})`}
-            {' · '}{dbReady ? '🟢 Connected' : '🟠 Demo mode'}
+            <span title={dbReady ? 'Database Connected' : 'Demo Mode (Offline)'}>{' · '}{dbReady ? '🟢' : '🟠'}</span>
           </span>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">

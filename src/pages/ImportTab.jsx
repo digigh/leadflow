@@ -83,7 +83,7 @@ function mapRow(row, mapping, source) {
 const STEPS = ['Upload File', 'Set Source', 'Map Columns', 'Handle Duplicates', 'Preview & Import']
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function ImportTab({ leads = [], setLeads, dbReady = false, darkMode = false, settings = {} }) {
+export default function ImportTab({ leads = [], setLeads, dbReady = false, darkMode = false, settings = {}, onAddNotification }) {
   const [step, setStep] = useState(0)
   const [file, setFile] = useState(null)
   const [rawRows, setRawRows] = useState([])       // parsed rows from file
@@ -213,6 +213,13 @@ export default function ImportTab({ leads = [], setLeads, dbReady = false, darkM
 
       setProgress(100)
       setResult({ inserted, updated, skipped })
+      if (!dbReady && onAddNotification && inserted > 0) {
+        onAddNotification({
+          title: 'Leads Imported Locally',
+          message: `Successfully imported ${inserted} new leads locally (Demo Mode).`,
+          tab: 'leads'
+        })
+      }
     } catch (err) {
       showToast('Import failed: ' + err.message, 'error')
     }

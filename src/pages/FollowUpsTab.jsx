@@ -28,7 +28,7 @@ function classStyle(cls) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, darkMode = false, settings = {} }) {
+export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, darkMode = false, settings = {}, onAddNotification }) {
   const statusOpts = settings.statusOptions || STATUS_OPTIONS
   const priorityOpts = settings.priorityOptions || PRIORITY_OPTIONS
   const assignedOpts = settings.assignedOptions || ASSIGNED_OPTIONS
@@ -117,6 +117,14 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
       showToast('Saved ✓  (reflected in Lead Management)')
     } else {
       showToast('Saved locally (DB not connected)', 'error')
+      if (onAddNotification) {
+        const lead = leads.find(l => l.id === id)
+        onAddNotification({
+          title: 'Follow-up Scheduled Locally',
+          message: `Scheduled follow-up for "${lead?.lead_name || 'Lead'}" updated locally.`,
+          tab: 'followups'
+        })
+      }
     }
 
     // Update shared leads state — reflects in Lead Management tab instantly
@@ -163,7 +171,7 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
   const selectCls = `px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/20 focus:border-[#2F6BFF] ${t.input}`
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col overflow-hidden space-y-5" style={{ height: 'calc(100vh - 112px)' }}>
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* ── Metric cards ── */}
@@ -187,7 +195,7 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
       </div>
 
       {/* ── Main card ── */}
-      <div className={`${t.card} border rounded-xl shadow-sm overflow-hidden`}>
+      <div className={`${t.card} border rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col min-h-0`}>
 
         {/* Toolbar */}
         <div className={`p-4 border-b ${t.divider} space-y-3`}>
@@ -242,12 +250,12 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-auto flex-1 min-h-0 relative">
+            <table className="w-full min-w-[1200px] text-sm">
               <thead>
-                <tr className={`${t.th} border-b ${t.divider}`}>
+                <tr className={`${t.th} border-b ${t.divider} sticky top-0 z-10 shadow-sm`}>
                   {['Lead', 'Company', 'Contact', 'Assigned To', 'Follow-up Time', 'Status', 'Priority', 'Feedback / Remarks', 'Actions'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap">{h}</th>
+                    <th key={h} className={`px-4 py-3 text-left text-xs font-semibold whitespace-nowrap ${darkMode ? 'bg-[#1E2436]' : 'bg-[#F8FAFC]'}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -421,7 +429,7 @@ export default function FollowUpsTab({ leads = [], setLeads, dbReady = false, da
           <ChevronRight size={11} />
           Showing {filtered.length} of {followUpLeads.length} follow-up leads
           {filtered.length !== followUpLeads.length && ' (filtered)'}
-          {' · '}{dbReady ? '🟢 Connected' : '🟠 Demo mode'}
+          <span title={dbReady ? 'Database Connected' : 'Demo Mode (Offline)'}>{' · '}{dbReady ? '🟢' : '🟠'}</span>
         </div>
       </div>
     </div>

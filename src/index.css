@@ -30,33 +30,34 @@ body {
 
 /* ─── DARK MODE ───────────────────────────────────────────────────────────── */
 html.dark body {
-  background-color: #0F1117;
+  background-color: #0B0D14; /* Deep premium midnight */
 }
-html.dark ::-webkit-scrollbar-track { background: #161B27; }
-html.dark ::-webkit-scrollbar-thumb { background: #2A2F3E; }
+html.dark ::-webkit-scrollbar-track { background: #11141F; }
+html.dark ::-webkit-scrollbar-thumb { background: #222638; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #353C58; }
 
 /* Cards / panels */
 html.dark .bg-white,
-html.dark .bg-\[\#F6F8FB\] { background-color: #1A2035 !important; }
+html.dark .bg-\[\#F6F8FB\] { background-color: #151824 !important; }
 html.dark .bg-\[\#F8FAFC\],
 html.dark .bg-\[\#F9FBFF\],
-html.dark .bg-\[\#F4F6F9\] { background-color: #1E2540 !important; }
+html.dark .bg-\[\#F4F6F9\] { background-color: #191D2C !important; }
 
 /* Borders */
 html.dark .border-\[\#E6EBF2\],
-html.dark .border-\[\#EEF2F7\] { border-color: #2A2F3E !important; }
+html.dark .border-\[\#EEF2F7\] { border-color: #242838 !important; }
 
 /* Text */
 html.dark .text-\[\#2F3542\]  { color: #E2E8F0 !important; }
-html.dark .text-\[\#6B778C\]  { color: #8892A4 !important; }
-html.dark .text-\[\#9AA5B1\]  { color: #64748B !important; }
+html.dark .text-\[\#6B778C\]  { color: #7C8B9E !important; }
+html.dark .text-\[\#9AA5B1\]  { color: #5B687C !important; }
 
 /* Inputs & selects */
 html.dark input,
 html.dark select,
 html.dark textarea {
-  background-color: #1E2540 !important;
-  border-color: #2A2F3E !important;
+  background-color: #191D2C !important;
+  border-color: #242838 !important;
   color: #E2E8F0 !important;
 }
 html.dark input::placeholder { color: #4A5568 !important; }

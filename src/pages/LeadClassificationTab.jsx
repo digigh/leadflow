@@ -82,20 +82,20 @@ export default function LeadClassificationTab({ leads, darkMode }) {
     
     // Dynamic styles based on type
     const s = type === 'hot' ? {
-      border: 'border-red-200 dark:border-red-900',
-      bg: 'bg-red-50 dark:bg-red-900/10',
-      badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
-      accent: 'text-red-500'
+      border: 'border-red-200 dark:border-red-900/50',
+      bg: 'bg-red-50 dark:bg-red-500/10',
+      badge: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400 dark:border dark:border-red-500/20 shadow-[0_0_12px_rgba(239,68,68,0.05)]',
+      accent: 'text-red-600 dark:text-red-400'
     } : type === 'warm' ? {
-      border: 'border-orange-200 dark:border-orange-900',
-      bg: 'bg-orange-50 dark:bg-orange-900/10',
-      badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
-      accent: 'text-orange-500'
+      border: 'border-orange-200 dark:border-orange-900/50',
+      bg: 'bg-orange-50 dark:bg-orange-500/10',
+      badge: 'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 dark:border dark:border-orange-500/20 shadow-[0_0_12px_rgba(249,115,22,0.05)]',
+      accent: 'text-orange-600 dark:text-orange-400'
     } : {
-      border: 'border-blue-200 dark:border-blue-900',
-      bg: 'bg-blue-50 dark:bg-blue-900/10',
-      badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
-      accent: 'text-blue-500'
+      border: 'border-blue-200 dark:border-blue-900/50',
+      bg: 'bg-blue-50 dark:bg-blue-500/10',
+      badge: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 dark:border dark:border-blue-500/20 shadow-[0_0_12px_rgba(59,130,246,0.05)]',
+      accent: 'text-blue-600 dark:text-blue-400'
     }
 
     return (

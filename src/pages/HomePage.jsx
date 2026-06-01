@@ -219,8 +219,8 @@ export default function HomePage({ onNavigate }) {
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
               <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
               <span className="ml-2 text-[10px] font-mono" style={{ color: '#4B6EA8' }}>leadflow.internal/dashboard</span>
-              <div className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#34D399' }}>
-                <span className="live-dot w-1.5 h-1.5 bg-green-400 rounded-full" />DB Connected
+              <div className="ml-auto flex items-center justify-center w-5 h-5 rounded-full" title="Database Connected">
+                <span className="live-dot w-1.5 h-1.5 bg-green-400 rounded-full" />
               </div>
             </div>
             {/* Metric cards */}

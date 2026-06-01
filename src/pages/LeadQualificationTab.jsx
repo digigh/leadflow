@@ -53,7 +53,7 @@ export default function LeadQualificationTab({ leads, darkMode }) {
   }, [leads, filterOwner, filterIndustry, searchTerm])
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="flex flex-col overflow-hidden space-y-5 max-w-7xl mx-auto" style={{ height: 'calc(100vh - 112px)' }}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className={`text-xl font-bold ${t.text}`}>Qualified Lead Data</h2>
@@ -80,16 +80,16 @@ export default function LeadQualificationTab({ leads, darkMode }) {
         </div>
       </div>
 
-      <div className={`rounded-xl border ${t.border} overflow-hidden ${t.card}`}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className={`text-[10px] uppercase font-bold tracking-wider ${t.th} border-b ${t.border}`}>
+      <div className={`rounded-xl border ${t.border} overflow-hidden ${t.card} flex-1 flex flex-col min-h-0`}>
+        <div className="overflow-auto flex-1 min-h-0 relative">
+          <table className="w-full min-w-[1000px] text-left text-sm">
+            <thead className={`text-[10px] uppercase font-bold tracking-wider ${t.th} border-b ${t.border} sticky top-0 z-10 shadow-sm`}>
               <tr>
-                <th className="px-5 py-4">Ranking</th>
-                <th className="px-5 py-4">Lead Profile</th>
-                <th className="px-5 py-4">Qualification Data</th>
-                <th className="px-5 py-4">Timeline / Scale</th>
-                <th className="px-5 py-4">Assigned To</th>
+                <th className={`px-5 py-4 ${darkMode ? 'bg-[#1A2035]' : 'bg-[#F4F6F9]'}`}>Ranking</th>
+                <th className={`px-5 py-4 ${darkMode ? 'bg-[#1A2035]' : 'bg-[#F4F6F9]'}`}>Lead Profile</th>
+                <th className={`px-5 py-4 ${darkMode ? 'bg-[#1A2035]' : 'bg-[#F4F6F9]'}`}>Qualification Data</th>
+                <th className={`px-5 py-4 ${darkMode ? 'bg-[#1A2035]' : 'bg-[#F4F6F9]'}`}>Timeline / Scale</th>
+                <th className={`px-5 py-4 ${darkMode ? 'bg-[#1A2035]' : 'bg-[#F4F6F9]'}`}>Assigned To</th>
               </tr>
             </thead>
             <tbody>
@@ -100,9 +100,11 @@ export default function LeadQualificationTab({ leads, darkMode }) {
                     <td className="px-5 py-3 align-top">
                       <div className="flex flex-col items-start gap-1">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-black
-                          ${qual.category === 'Hot' ? 'bg-red-50 text-red-600 border border-red-200' 
-                          : qual.category === 'Warm' ? 'bg-orange-50 text-orange-600 border border-orange-200' 
-                          : 'bg-blue-50 text-blue-600 border border-blue-200'}`}>
+                          ${qual.category === 'Hot' 
+                            ? (darkMode ? 'bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_12px_rgba(239,68,68,0.1)]' : 'bg-red-50 text-red-600 border border-red-200') 
+                            : qual.category === 'Warm' 
+                            ? (darkMode ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_12px_rgba(249,115,22,0.1)]' : 'bg-orange-50 text-orange-600 border border-orange-200') 
+                            : (darkMode ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_12px_rgba(59,130,246,0.1)]' : 'bg-blue-50 text-blue-600 border border-blue-200')}`}>
                           #{(idx+1).toString().padStart(2, '0')} · {qual.category}
                         </span>
                         <span className={`text-[11px] font-bold ${qual.category === 'Hot' ? 'text-red-500' : qual.category === 'Warm' ? 'text-orange-500' : 'text-blue-500'}`}>{qual.score} Points</span>

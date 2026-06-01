@@ -33,13 +33,21 @@ export default function Dashboard({ onLogout }) {
   const [loading, setLoading] = useState(true)
   const [dbReady, setDbReady] = useState(false)
 
-  const [notifications, setNotifications] = useState([])
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Welcome to LeadFlow!",
+      message: "Your real-time lead tracking and scoring platform is active.",
+      tab: "leads",
+      time: new Date(),
+      read: false
+    }
+  ])
   const [bellOpen, setBellOpen] = useState(false)
   const [polling, setPolling] = useState(false)
   const bellRef = useRef(null)
   const followUpBellRef = useRef(null)
   const [followUpBellOpen, setFollowUpBellOpen] = useState(false)
-  const knownIdsRef = useRef(new Set())
 
   const [newLeadIds, setNewLeadIds] = useState(new Set())
   const highlightTimerRef = useRef(null)
@@ -47,6 +55,52 @@ export default function Dashboard({ onLogout }) {
   const clearHighlights = () => {
     clearTimeout(highlightTimerRef.current)
     setNewLeadIds(new Set())
+  }
+
+  // Ref optimization to avoid tearing down real-time subscription when state updates
+  const leadsRef = useRef(leads)
+  const activeTabRef = useRef(activeTab)
+
+  useEffect(() => {
+    leadsRef.current = leads
+  }, [leads])
+
+  useEffect(() => {
+    activeTabRef.current = activeTab
+  }, [activeTab])
+
+  // General tab unread counts computation
+  const tabUnreadCounts = useMemo(() => {
+    const counts = { leads: 0, qualification: 0, classification: 0, followups: 0 }
+    notifications.forEach(n => {
+      if (!n.read && counts[n.tab] !== undefined) {
+        counts[n.tab]++
+      }
+    })
+    return counts
+  }, [notifications])
+
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications])
+
+  // Local notification creator callback (for Demo Mode fallbacks)
+  const handleAddNotification = useCallback(({ title, message, tab }) => {
+    setNotifications(prev => [
+      {
+        id: Date.now(),
+        title,
+        message,
+        tab,
+        time: new Date(),
+        read: activeTabRef.current === tab
+      },
+      ...prev
+    ].slice(0, 50))
+  }, [])
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId)
+    // Mark notifications as read for clicked tab
+    setNotifications(prev => prev.map(n => n.tab === tabId ? { ...n, read: true } : n))
   }
 
   useEffect(() => {
@@ -74,27 +128,16 @@ export default function Dashboard({ onLogout }) {
       if (error) throw error
 
       if (data && data.length > 0) {
-        const validData = data.filter(l => l.status !== '--Delete--');
-        
-        if (opts.trackNew && knownIdsRef.current.size > 0) {
-          const incoming = new Set(validData.map(l => l.id))
-          const fresh = [...incoming].filter(id => !knownIdsRef.current.has(id))
-          if (fresh.length > 0) {
-            const freshLeads = validData.filter(l => fresh.includes(l.id))
-            const notif = {
-              id: Date.now(),
-              count: fresh.length,
-              time: new Date(),
-              leads: freshLeads,
-            }
-            setNotifications(prev => [notif, ...prev].slice(0, 20))
-
-            setNewLeadIds(new Set(fresh))
-            clearTimeout(highlightTimerRef.current)
-            highlightTimerRef.current = setTimeout(clearHighlights, LIVE_HIGHLIGHT_MS)
+        const validData = data.filter(l => l.status !== '--Delete--').map(l => {
+          let qual = l.lead_qualifications
+          if (qual && !Array.isArray(qual)) {
+            qual = [qual]
           }
-        }
-        knownIdsRef.current = new Set(validData.map(l => l.id))
+          return {
+            ...l,
+            lead_qualifications: qual || []
+          }
+        })
         setLeads(validData)
         setDbReady(true)
       } else {
@@ -108,6 +151,7 @@ export default function Dashboard({ onLogout }) {
     if (!opts.silent) setLoading(false)
   }, [])
 
+  // 1. Initial leads fetch
   useEffect(() => {
     let mounted = true
     async function init() {
@@ -128,11 +172,149 @@ export default function Dashboard({ onLogout }) {
     return () => { mounted = false }
   }, [loadLeads])
 
+  // 2. Real-time changes listeners using Supabase WebSockets
+  const insertBufferRef = useRef([])
+  const flushTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    if (!dbReady) return
+
+    const handleRealtimeLeadChange = async (payload) => {
+      console.log('Realtime Lead Change:', payload)
+      // Always silently reload leads so the entire app gets fully up-to-date DB datasets
+      await loadLeads({ silent: true })
+
+      if (payload.eventType === 'INSERT') {
+        // Buffer new inserts to handle bulk Excel imports gracefully
+        insertBufferRef.current.push(payload.new)
+        
+        if (flushTimeoutRef.current) clearTimeout(flushTimeoutRef.current)
+        
+        flushTimeoutRef.current = setTimeout(() => {
+          const items = insertBufferRef.current
+          insertBufferRef.current = []
+          
+          let title = ''
+          let message = ''
+          
+          if (items.length === 1) {
+            title = 'New Lead Added'
+            message = `Lead "${items[0].lead_name || 'Unknown'}" added via ${items[0].source || 'Direct'}.`
+            
+            // Trigger live glow highlight for single new lead
+            setNewLeadIds(prev => {
+              const next = new Set(prev)
+              next.add(items[0].id)
+              return next
+            })
+            clearTimeout(highlightTimerRef.current)
+            highlightTimerRef.current = setTimeout(clearHighlights, LIVE_HIGHLIGHT_MS)
+          } else if (items.length > 1) {
+            const src = items[0].source || 'Import'
+            title = `${items.length} New Leads Added`
+            message = `Successfully loaded ${items.length} new leads via ${src}.`
+          }
+
+          if (title && message) {
+            setNotifications(prev => [
+              {
+                id: Date.now(),
+                title,
+                message,
+                tab: 'leads',
+                time: new Date(),
+                read: activeTabRef.current === 'leads'
+              },
+              ...prev
+            ].slice(0, 50))
+          }
+        }, 500)
+      } else {
+        // Process Updates or Deletes instantly
+        let title = ''
+        let message = ''
+        const updated = payload.new
+
+        if (payload.eventType === 'UPDATE') {
+          const old = payload.old
+          if (old && old.status !== updated.status) {
+            title = 'Lead Status Updated'
+            message = `"${updated.lead_name}" changed to "${updated.status || 'New'}".`
+          } else {
+            title = 'Lead Details Modified'
+            message = `CRM details updated for "${updated.lead_name}".`
+          }
+        } else if (payload.eventType === 'DELETE') {
+          title = 'Lead Deleted'
+          message = `A lead record was removed from the database.`
+        }
+
+        if (title && message) {
+          setNotifications(prev => [
+            {
+              id: Date.now(),
+              title,
+              message,
+              tab: 'leads',
+              time: new Date(),
+              read: activeTabRef.current === 'leads'
+            },
+            ...prev
+          ].slice(0, 50))
+        }
+      }
+    }
+
+    const handleRealtimeQualChange = async (payload) => {
+      console.log('Realtime Qualification Change:', payload)
+      await loadLeads({ silent: true })
+
+      let title = ''
+      let message = ''
+      let tab = 'classification' // lead classification tab displays lead scores
+
+      if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+        const score = payload.new.score
+        const category = payload.new.category || 'Cold'
+        const lead = leadsRef.current.find(l => l.id === payload.new.lead_id)
+        const leadName = lead ? lead.lead_name : `Lead #${payload.new.lead_id}`
+
+        title = 'Lead Scored / Qualified'
+        message = `"${leadName}" scored as "${category}" (${score} pts).`
+      }
+
+      if (title && message) {
+        setNotifications(prev => [
+          {
+            id: Date.now(),
+            title,
+            message,
+            tab,
+            time: new Date(),
+            read: activeTabRef.current === tab
+          },
+          ...prev
+        ].slice(0, 50))
+      }
+    }
+
+    const channel = supabase
+      .channel('realtime-dashboard-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, handleRealtimeLeadChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lead_qualifications' }, handleRealtimeQualChange)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [dbReady, loadLeads])
+
+  // 3. Fallback background database sync polling (every 5 mins)
   useEffect(() => {
     const timer = setInterval(async () => {
       setPolling(true)
       try {
-        await loadLeads({ trackNew: true, silent: true })
+        await loadLeads({ silent: true })
       } catch { }
       setPolling(false)
     }, POLL_INTERVAL_MS)
@@ -150,7 +332,16 @@ export default function Dashboard({ onLogout }) {
       if (error) throw error
 
       if (data) {
-        const validData = data.filter(l => l.status !== '--Delete--')
+        const validData = data.filter(l => l.status !== '--Delete--').map(l => {
+          let qual = l.lead_qualifications
+          if (qual && !Array.isArray(qual)) {
+            qual = [qual]
+          }
+          return {
+            ...l,
+            lead_qualifications: qual || []
+          }
+        })
         const newCount = validData.filter(l => !oldIds.has(l.id)).length
         setLeads(validData)
         setDbReady(true)
@@ -162,9 +353,6 @@ export default function Dashboard({ onLogout }) {
       throw err
     }
   }
-
-  const unreadCount = notifications.length
-
   const todayFollowUps = useMemo(() => {
     const todayStr = new Date().toDateString()
     return leads.filter(l => l.follow_up_at && new Date(l.follow_up_at).toDateString() === todayStr)
@@ -225,16 +413,28 @@ export default function Dashboard({ onLogout }) {
             ['import', Upload, 'Import Leads'],
             ['analytics', BarChart2, 'Analytics'],
             ['settings', Settings, 'Settings'],
-          ].map(([id, Icon, label]) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-left transition-colors ${activeTab === id ? t.navActive : t.navHover}`}
-            >
-              <Icon size={18} className="shrink-0" />
-              {sidebarOpen && <span className="text-sm font-semibold">{label}</span>}
-            </button>
-          ))}
+          ].map(([id, Icon, label]) => {
+            const count = tabUnreadCounts[id] || 0
+            return (
+              <button
+                key={id}
+                onClick={() => handleTabClick(id)}
+                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-left transition-colors ${activeTab === id ? t.navActive : t.navHover}`}
+              >
+                <Icon size={18} className="shrink-0" />
+                {sidebarOpen && <span className="text-sm font-semibold">{label}</span>}
+                {count > 0 && (
+                  sidebarOpen ? (
+                    <span className="ml-auto px-2 py-0.5 text-[10px] font-black rounded-full bg-red-500 text-white shadow-sm leading-none animate-pulse">
+                      {count}
+                    </span>
+                  ) : (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 shadow-sm animate-ping" />
+                  )
+                )}
+              </button>
+            )
+          })}
         </nav>
         <div className={`p-4 mt-auto border-t ${t.border}`}>
           <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-white bg-red-500 hover:bg-red-600 shadow-sm transition-all">
@@ -265,9 +465,11 @@ export default function Dashboard({ onLogout }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 ${dbReady ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'} rounded-lg text-xs font-semibold`}>
-              <span className={`w-1.5 h-1.5 ${dbReady ? 'bg-green-500' : 'bg-yellow-500'} rounded-full ${polling ? 'animate-ping' : 'animate-pulse'}`} />
-              {polling ? 'Refreshing…' : dbReady ? 'DB Connected' : 'Demo Mode'}
+            <div 
+              className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${dbReady ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}
+              title={polling ? 'Refreshing database…' : dbReady ? 'Database Connected' : 'Demo Mode (Offline)'}
+            >
+              <span className={`w-2 h-2 ${dbReady ? 'bg-green-500' : 'bg-yellow-500'} rounded-full ${polling ? 'animate-ping' : 'animate-pulse'}`} />
             </div>
             <div className="relative" ref={bellRef}>
               <button onClick={() => setBellOpen(o => !o)} className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-colors ${darkMode ? 'bg-[#2A2F3E] text-[#8892A4] hover:text-[#E2E8F0]' : 'bg-[#F4F6F9] text-[#6B778C] hover:bg-[#E6EBF2]'}`} title="Notifications">
@@ -277,31 +479,57 @@ export default function Dashboard({ onLogout }) {
               {bellOpen && (
                 <div className={`absolute right-0 top-11 w-80 ${t.dropdown} border rounded-xl shadow-2xl z-50 overflow-hidden`}>
                   <div className={`px-4 py-3 border-b ${t.border} flex items-center justify-between`}>
-                    <div className="flex items-center gap-2"><Sparkles size={14} className="text-[#2F6BFF]" /><span className={`text-sm font-bold ${t.text}`}>New Leads</span></div>
+                    <div className="flex items-center gap-2"><Sparkles size={14} className="text-[#2F6BFF]" /><span className={`text-sm font-bold ${t.text}`}>Live Activity</span></div>
                     <div className="flex items-center gap-2">
-                      {notifications.length > 0 && <button onClick={() => setNotifications([])} className={`text-xs ${t.subtext} hover:text-red-500 transition-colors`}>Clear all</button>}
-                      <button onClick={() => setBellOpen(false)} className={t.iconBtn}><X size={14} /></button>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))} 
+                          className={`text-xs ${t.subtext} hover:text-[#2F6BFF] transition-colors font-semibold`}
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                      {notifications.length > 0 && (
+                        <button onClick={() => setNotifications([])} className={`text-xs text-red-500 hover:text-red-600 transition-colors font-semibold ml-2`}>Clear</button>
+                      )}
+                      <button onClick={() => setBellOpen(false)} className={`${t.iconBtn} ml-1`}><X size={14} /></button>
                     </div>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className={`py-10 text-center ${t.subtext} text-sm`}><Bell size={24} className="mx-auto mb-2 opacity-30" /><p>No new leads yet</p><p className="text-xs mt-1 opacity-70">Checks every 5 minutes automatically</p></div>
+                      <div className={`py-10 text-center ${t.subtext} text-sm`}><Bell size={24} className="mx-auto mb-2 opacity-30" /><p>No notifications yet</p><p className="text-xs mt-1 opacity-70">Listening for real-time CRM updates...</p></div>
                     ) : (
                       notifications.map(n => (
-                        <div key={n.id} className={`px-4 py-3 border-b ${t.border} ${t.dropdownItem} transition-colors`}>
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className={`text-xs font-bold ${t.text}`}>🟢 {n.count} new lead{n.count > 1 ? 's' : ''} loaded</p>
-                              {n.leads.slice(0, 2).map(l => <p key={l.id} className={`text-xs ${t.subtext} mt-0.5`}>· {l.lead_name || '—'} ({l.source || '—'})</p>)}
-                              {n.leads.length > 2 && <p className={`text-xs ${t.subtext} opacity-60`}>+{n.leads.length - 2} more</p>}
+                        <div 
+                          key={n.id} 
+                          onClick={() => {
+                            // Mark read
+                            setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item))
+                            // Navigate to tab
+                            if (n.tab) handleTabClick(n.tab)
+                          }}
+                          className={`px-4 py-3 border-b ${t.border} ${t.dropdownItem} transition-colors cursor-pointer ${!n.read ? (darkMode ? 'bg-[#1E3A5F]/20' : 'bg-blue-50/50') : ''}`}
+                        >
+                          <div className="flex gap-2.5 items-start">
+                            <span className="text-xs shrink-0 mt-0.5">
+                              {n.tab === 'leads' ? '🟢' 
+                               : n.tab === 'qualification' ? '📝' 
+                               : n.tab === 'classification' ? '⚡' 
+                               : '⏰'}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-bold ${t.text} truncate`}>{n.title}</p>
+                              <p className={`text-[10px] ${t.subtext} leading-relaxed mt-0.5`}>{n.message}</p>
                             </div>
-                            <span className={`text-[10px] ${t.subtext} whitespace-nowrap shrink-0`}>{n.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span className={`text-[9px] ${t.subtext} whitespace-nowrap shrink-0`}>
+                              {new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
                         </div>
                       ))
                     )}
                   </div>
-                  <div className={`px-4 py-2 border-t ${t.border} flex items-center gap-1 ${t.subtext} text-[10px]`}><RefreshCw size={10} className={polling ? 'animate-spin' : ''} />Auto-refreshes every 5 min</div>
+                  <div className={`px-4 py-2 border-t ${t.border} flex items-center gap-1 ${t.subtext} text-[10px]`}><RefreshCw size={10} className={polling ? 'animate-spin' : ''} />Real-time WebSockets active</div>
                 </div>
               )}
             </div>
@@ -349,19 +577,19 @@ export default function Dashboard({ onLogout }) {
         </header>
         <main className={`flex-1 overflow-auto p-6 ${t.bg}`}>
           {activeTab === 'leads' ? (
-            <LeadsTab leads={leads} setLeads={setLeads} loading={loading} dbReady={dbReady} onSync={handleSync} darkMode={darkMode} newLeadIds={newLeadIds} settings={settings} />
+            <LeadsTab leads={leads} setLeads={setLeads} loading={loading} dbReady={dbReady} onSync={handleSync} darkMode={darkMode} newLeadIds={newLeadIds} settings={settings} onAddNotification={handleAddNotification} />
           ) : activeTab === 'qualification' ? (
             <LeadQualificationTab leads={leads} setLeads={setLeads} darkMode={darkMode} />
           ) : activeTab === 'classification' ? (
             <LeadClassificationTab leads={leads} darkMode={darkMode} />
           ) : activeTab === 'followups' ? (
-            <FollowUpsTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} />
+            <FollowUpsTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} onAddNotification={handleAddNotification} />
           ) : activeTab === 'import' ? (
-            <ImportTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} />
+            <ImportTab leads={leads} setLeads={setLeads} dbReady={dbReady} darkMode={darkMode} settings={settings} onAddNotification={handleAddNotification} />
           ) : activeTab === 'analytics' ? (
             <AnalyticsTab leads={leads} darkMode={darkMode} settings={settings} />
           ) : (
-            <SettingsTab settings={settings} onSettingsChange={handleSettingsChange} />
+            <SettingsTab settings={settings} onSettingsChange={handleSettingsChange} darkMode={darkMode} />
           )}
         </main>
       </div>

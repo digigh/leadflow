@@ -118,11 +118,29 @@ CREATE TABLE IF NOT EXISTS lead_qualifications (
   company_name   TEXT,
   notes          TEXT,
   qualified_by   TEXT,
+  role           TEXT,
+  use_case       TEXT,
+  scale          TEXT,
+  geography      TEXT,
+  experience     BOOLEAN DEFAULT FALSE,
+  category       TEXT,
+  action_plan    TEXT,
   qualified_at   TIMESTAMPTZ DEFAULT NOW(),
   created_at     TIMESTAMPTZ DEFAULT NOW(),
   updated_at     TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(lead_id)
 );
+
+-- ── 7B. MIGRATIONS FOR EXISTING LEAD_QUALIFICATIONS TABLE ────────────────────
+-- Add any missing columns to an existing lead_qualifications table
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS role        TEXT;
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS use_case    TEXT;
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS scale       TEXT;
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS geography   TEXT;
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS experience  BOOLEAN DEFAULT FALSE;
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS category    TEXT;
+ALTER TABLE lead_qualifications ADD COLUMN IF NOT EXISTS action_plan TEXT;
+
 
 CREATE OR REPLACE FUNCTION update_lead_qualifications_updated_at()
 RETURNS TRIGGER AS $$
